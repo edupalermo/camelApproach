@@ -8,6 +8,13 @@
     <artifactId>camel</artifactId>
     <version>1.0-SNAPSHOT</version>
 
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>1.5.12.RELEASE</version>
+    </parent>
+
+
     <properties>
         <camel-version>2.21.0</camel-version>
         <commons-logging-version>1.2</commons-logging-version>
@@ -16,6 +23,14 @@
     </properties>
 
     <dependencies>
+
+        <dependency>
+            <groupId>org.apache.camel</groupId>
+            <artifactId>camel-spring-boot-starter</artifactId>
+            <version>${camel-version}</version>
+        </dependency>
+
+        <!--
         <dependency>
             <groupId>org.apache.camel</groupId>
             <artifactId>camel-core</artifactId>
@@ -33,17 +48,13 @@
             <version>${log4j2-version}</version>
             <type>pom</type>
         </dependency>
-        <!--
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-            <version>${slf4j-version}</version>
-        </dependency> -->
+
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-log4j12</artifactId>
             <version>${slf4j-version}</version>
         </dependency>
+        -->
     </dependencies>
 
 
