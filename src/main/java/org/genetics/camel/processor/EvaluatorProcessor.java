@@ -12,6 +12,6 @@ public class EvaluatorProcessor implements Processor {
     private static final Logger logger = LoggerFactory.getLogger(EvaluatorProcessor.class);
 
     public void process(Exchange exchange) throws Exception {
-        exchange.getOut().setBody(new Circuit("Circuit Evaluated"));
+        exchange.getOut().setBody("Circuit Evaluated");
     }
 }

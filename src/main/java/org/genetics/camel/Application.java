@@ -11,14 +11,22 @@ import org.genetics.camel.predicate.GenerationPredicate;
 import org.genetics.camel.processor.EvaluatorProcessor;
 import org.genetics.camel.processor.GeneratorProcessor;
 import org.genetics.camel.processor.SimplifierProcessor;
+import org.genetics.circuit.dao.ProblemDao;
+import org.genetics.circuit.dao.SuiteWrapperDao;
+import org.genetics.circuit.dao.jdbc.JdbcProblemDao;
+import org.genetics.circuit.dao.jdbc.JdbcSuiteWrapperDao;
+import org.genetics.circuit.entity.Problem;
+import org.genetics.circuit.problem.vowel.VowelSuite;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
 
 @SpringBootApplication
+@ComponentScan({"org.genetics.circuit", "org.genetics.camel"})
 public class Application {
 
     private static Logger logger = LoggerFactory.getLogger(Application.class);
@@ -27,6 +35,13 @@ public class Application {
         ApplicationContext applicationContext = SpringApplication.run(Application.class, args);
         CamelContext camelContext = applicationContext.getBean("camelContext", CamelContext.class);
 
+
+        SuiteWrapperDao suiteWrapperDao = applicationContext.getBean(SuiteWrapperDao.class);
+        ProblemDao problemDao = applicationContext.getBean(ProblemDao.class);
+
+        Problem vowelProblem = problemDao.findByName("CHAR_TYPE");
+
+        suiteWrapperDao.create(vowelProblem, new VowelSuite());
     }
 
     /*

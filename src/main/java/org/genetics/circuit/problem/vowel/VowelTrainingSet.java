@@ -20,6 +20,7 @@ public class VowelTrainingSet implements TrainingSet {
 	public VowelTrainingSet() {
 		solutions.add(new StringSolution("a", "vogal"));
 		solutions.add(new StringSolution("b", "consoante"));
+		/*
 		solutions.add(new StringSolution("c", "consoante"));
 		solutions.add(new StringSolution("d", "consoante"));
 		solutions.add(new StringSolution("e", "vogal"));
@@ -37,8 +38,12 @@ public class VowelTrainingSet implements TrainingSet {
 		solutions.add(new StringSolution("u", "vogal"));
 		solutions.add(new StringSolution("y", "consoante"));
 		solutions.add(new StringSolution("z", "consoante"));
-		
+		*/
+
 		solutions.add(new StringSolution("A", "vogal"));
+		solutions.add(new StringSolution("B", "consoante"));
+
+		/*
 		solutions.add(new StringSolution("D", "consoante"));
 		solutions.add(new StringSolution("E", "vogal"));
 		solutions.add(new StringSolution("F", "consoante"));
@@ -50,22 +55,29 @@ public class VowelTrainingSet implements TrainingSet {
 		solutions.add(new StringSolution("U", "vogal"));
 		solutions.add(new StringSolution("Y", "consoante"));
 		solutions.add(new StringSolution("Z", "consoante"));
+		*/
 		
 		solutions.add(new StringSolution("0", "número"));
+
+		/*
 		solutions.add(new StringSolution("1", "número"));
 		solutions.add(new StringSolution("2", "número"));
 		solutions.add(new StringSolution("4", "número"));
 		solutions.add(new StringSolution("5", "número"));
 		solutions.add(new StringSolution("8", "número"));
 		solutions.add(new StringSolution("9", "número"));
+		*/
 		
 		solutions.add(new StringSolution("á", "vogal"));
+
+		/*
 		solutions.add(new StringSolution("à", "vogal"));
 		solutions.add(new StringSolution("ã", "vogal"));
 		solutions.add(new StringSolution("é", "vogal"));
 		solutions.add(new StringSolution("ó", "vogal"));
 		solutions.add(new StringSolution("ô", "vogal"));
 		solutions.add(new StringSolution("ú", "vogal"));
+		*/
 		
 		this.inputSize = this.solutions.get(0).get(0).getInput().length ;
 		this.outputSize = this.solutions.get(0).get(0).getOutput().length ;;

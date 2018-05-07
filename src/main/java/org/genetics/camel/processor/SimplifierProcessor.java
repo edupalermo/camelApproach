@@ -12,6 +12,6 @@ public class SimplifierProcessor implements Processor {
     private static final Logger logger = LoggerFactory.getLogger(SimplifierProcessor.class);
 
     public void process(Exchange exchange) throws Exception {
-        exchange.getOut().setBody(new Circuit("Circuit Simplified"));
+        exchange.getOut().setBody("Circuit Simplified");
     }
 }

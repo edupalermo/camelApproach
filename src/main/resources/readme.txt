@@ -6,6 +6,9 @@ export DERBY_OPTS=-Dderby.system.home=/opt/data/db-derby-10.12.1.1-bin/databases
 
 
 ./ij
-CONNECT 'jdbc:derby://localhost/circuitdb;create=true';
+# CONNECT 'jdbc:derby://localhost/circuitdb;create=true';
+CONNECT 'jdbc:derby://localhost/circuitdb';
+
+select * from APP.schema_version;
 
 SHOW TABLES;
