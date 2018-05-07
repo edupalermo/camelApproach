@@ -20,6 +20,7 @@
         <commons-logging-version>1.2</commons-logging-version>
         <log4j2-version>2.11.0</log4j2-version>
         <slf4j-version>1.7.22</slf4j-version>
+        <derby-version>10.13.1.1</derby-version>
     </properties>
 
     <dependencies>
@@ -28,6 +29,23 @@
             <groupId>org.apache.camel</groupId>
             <artifactId>camel-spring-boot-starter</artifactId>
             <version>${camel-version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.derby</groupId>
+            <artifactId>derbyclient</artifactId>
+            <version>${derby-version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>3.5</version>
         </dependency>
 
         <!--
