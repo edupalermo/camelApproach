@@ -36,12 +36,10 @@ public class Application {
         CamelContext camelContext = applicationContext.getBean("camelContext", CamelContext.class);
 
 
-        SuiteWrapperDao suiteWrapperDao = applicationContext.getBean(SuiteWrapperDao.class);
-        ProblemDao problemDao = applicationContext.getBean(ProblemDao.class);
-
-        Problem vowelProblem = problemDao.findByName("CHAR_TYPE");
-
-        suiteWrapperDao.create(vowelProblem, new VowelSuite());
+        //SuiteWrapperDao suiteWrapperDao = applicationContext.getBean(SuiteWrapperDao.class);
+        //ProblemDao problemDao = applicationContext.getBean(ProblemDao.class);
+        //Problem vowelProblem = problemDao.findByName("CHAR_TYPE");
+        //suiteWrapperDao.create(vowelProblem, new VowelSuite());
     }
 
     /*

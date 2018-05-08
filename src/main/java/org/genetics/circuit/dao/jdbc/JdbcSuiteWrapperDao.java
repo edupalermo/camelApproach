@@ -11,6 +11,7 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.PreparedStatementCreator;
 import org.springframework.jdbc.core.ResultSetExtractor;
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
@@ -28,17 +29,17 @@ public class JdbcSuiteWrapperDao implements SuiteWrapperDao {
 	private JdbcTemplate jdbcTemplate;
 	
 	private final static String SQL_INSERT = "insert into suite (problem_id, object, created) values (?, ?, ?)";
-	private final static String SQL_SELECT_LAST = "select problem_id, suite_id, object, created from suite where problem_id = ? order by created desc FETCH FIRST ROW ONLY";
+	private final static String SQL_SELECT_LAST = "select suite_id, problem_id, object, created from suite where problem_id = ? order by created desc FETCH FIRST ROW ONLY";
 
-	private ResultSetExtractor<SuiteWrapper> resultSetExtractor = new ResultSetExtractor<SuiteWrapper>() {
+	private RowMapper<SuiteWrapper> rowMapper = new RowMapper<SuiteWrapper>() {
 		@Override
-		public SuiteWrapper extractData(ResultSet rs) throws SQLException, DataAccessException {
-        	SuiteWrapper suiteWrapper = new SuiteWrapper();
-        	suiteWrapper.setId(rs.getInt("training_set_id"));
-        	suiteWrapper.setProblem(problemDao.getById(rs.getInt("problem_id")));
-        	suiteWrapper.setSuite(IoUtils.base64ToObject(rs.getString("object"), Suite.class));
-        	suiteWrapper.setCreated(rs.getTimestamp("created").toLocalDateTime());
-            return suiteWrapper;
+		public SuiteWrapper mapRow(ResultSet resultSet, int i) throws SQLException {
+			SuiteWrapper suiteWrapper = new SuiteWrapper();
+			suiteWrapper.setId(resultSet.getInt("suite_id"));
+			suiteWrapper.setProblem(problemDao.getById(resultSet.getInt("problem_id")));
+			suiteWrapper.setSuite(IoUtils.base64ToObject(resultSet.getString("object"), Suite.class));
+			suiteWrapper.setCreated(resultSet.getTimestamp("created").toLocalDateTime());
+			return suiteWrapper;
 		}
 	};
 
@@ -73,7 +74,7 @@ public class JdbcSuiteWrapperDao implements SuiteWrapperDao {
 
 	@Override
 	public SuiteWrapper findLatest(Problem problem) {
-    	return this.jdbcTemplate.query(SQL_SELECT_LAST, new Object[]{Integer.valueOf(problem.getId())}, resultSetExtractor);
+    	return this.jdbcTemplate.queryForObject(SQL_SELECT_LAST, new Object[]{Integer.valueOf(problem.getId())}, rowMapper);
 	}
 
 }

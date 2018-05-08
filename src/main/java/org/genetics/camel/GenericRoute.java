@@ -1,6 +1,7 @@
 package org.genetics.camel;
 
 import org.apache.camel.builder.RouteBuilder;
+import org.genetics.camel.configuration.Constants;
 import org.genetics.camel.predicate.GenerationPredicate;
 import org.genetics.camel.processor.EvaluatorProcessor;
 import org.genetics.camel.processor.GeneratorProcessor;
@@ -28,9 +29,15 @@ public class GenericRoute extends RouteBuilder {
 
         from(sedaGenerator())
                 //.delay(simple("${random(100, 500)}"))
-                .process("generatorProcessor")
-                //.transform(simple("Complex ${random(0,100000)}"))
-                .log("Step 1 - Generated... ${body}")
+                .process("generatorMethodDefinitionProcessor")
+                .choice()
+                    .when(header(Constants.HEADER_GENERATOR_METHOD).isEqualTo(Constants.GENERATOR_METHOD_RANDOM))
+                        .process("randomGeneratorProcessor")
+                    .otherwise()
+                        .log("Unknow method type! ${headers.GENERATOR_METHOD}")
+                        .stop()
+                .end()
+                .log("Step 1 - Generated... ${body} ${headers.GENERATOR_METHOD}")
                 .to(sedaSimplifier());
 
         from(sedaSimplifier())
@@ -59,7 +66,9 @@ public class GenericRoute extends RouteBuilder {
 
         // This will be triggered on startup
         //from("timer://foo?repeatCount=1").to("seda:loop");
-        from("timer://foo?delay=1&repeatCount=1").to("seda:loop");
+        from("timer://foo?delay=1&repeatCount=1")
+                .setHeader(Constants.HEADER_PROBLEM_NAME, constant("CHAR_TYPE"))
+                .to("seda:loop");
 
     }
 
