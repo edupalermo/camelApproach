@@ -13,5 +13,6 @@ public interface Constants {
     public String HEADER_GENERATOR_METHOD = "GENERATOR_METHOD";
 
     public String GENERATOR_METHOD_RANDOM = "RANDOM";
+    public String GENERATOR_METHOD_MIX_EXISTING = "MIX_EXISTING";
 
 }

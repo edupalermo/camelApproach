@@ -5,6 +5,7 @@ import org.genetics.circuit.circuit.CircuitToString;
 import org.genetics.circuit.entity.SuiteWrapper;
 import org.genetics.circuit.problem.CircuitComparator;
 import org.genetics.circuit.utils.CircuitUtils;
+import org.genetics.circuit.utils.RandomUtils;
 import org.genetics.circuit.utils.SuiteWrapperUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -117,5 +118,14 @@ public class PopulationService {
         }
         return circuit;
     }
+
+    public synchronized Circuit getWeightedRandom() {
+        Circuit circuit = null;
+        if (population.size() > 0) {
+            circuit = population.get(RandomUtils.raffle(population.size()));
+        }
+        return circuit;
+    }
+
 
 }
