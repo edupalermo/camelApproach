@@ -95,15 +95,17 @@ public class Circuit extends ArrayList<Port> implements Cloneable {
 		for (Port port : this) {
 			circuit.add((Port) port.clone());
 		}
-		
+
+		/*
 		for (Entry<String, Object> entry : buffer.entrySet()) {
 			circuit.setBuffer(entry.getKey(), entry.getValue());
 		}
-		
+		*/
+
 		return circuit;
 	}
 
-	
+	/*
 	public Circuit fullClone() {
 		Circuit circuit = (Circuit) this.clone();
 		
@@ -113,5 +115,6 @@ public class Circuit extends ArrayList<Port> implements Cloneable {
 		
 		return circuit;
 	}
+	*/
 
 }

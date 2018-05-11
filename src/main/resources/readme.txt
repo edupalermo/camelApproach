@@ -12,3 +12,8 @@ CONNECT 'jdbc:derby://localhost/circuitdb';
 select * from APP.schema_version;
 
 SHOW TABLES;
+
+
+# dont word wrap
+tput rmam
+# Re-enable tput smam

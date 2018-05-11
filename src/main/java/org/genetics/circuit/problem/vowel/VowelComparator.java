@@ -53,12 +53,14 @@ public class VowelComparator implements CircuitComparator {
 			//logger.warn(CircuitToString.toString(getOuter(), c1));
 			//logger.warn(CircuitToString.toString(getOuter(), c2));
 		}
-		
+
+		/*
 		int i = c1.size() - 1;
 		while ((answer == 0) && (i >= 0)) {
 			answer = c1.get(i).toString().compareTo(c2.get(i).toString());
 			i--;
 		}
+		*/
 		
 		return answer;
 	}

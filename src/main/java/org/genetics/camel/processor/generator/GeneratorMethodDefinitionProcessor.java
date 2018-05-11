@@ -22,10 +22,9 @@ public class GeneratorMethodDefinitionProcessor implements Processor, Initializi
 
     @Override
     public void afterPropertiesSet() throws Exception {
-
         randomWeight = new RandomWeight<String>();
 
         randomWeight.addByWeight(10, Constants.GENERATOR_METHOD_RANDOM);
-        randomWeight.addByWeight(1, "UNDEF");
+        //randomWeight.addByWeight(1, "UNDEF");
     }
 }

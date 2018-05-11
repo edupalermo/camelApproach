@@ -5,13 +5,18 @@ import org.genetics.circuit.circuit.Circuit;
 import org.genetics.circuit.entity.SuiteWrapper;
 import org.genetics.circuit.problem.CircuitComparator;
 import org.genetics.circuit.problem.Evaluator;
+import org.genetics.circuit.problem.Suite;
 import org.genetics.circuit.problem.TrainingSet;
 
 public class SuiteWrapperUtil {
-	
-	public static void evaluate(SuiteWrapper suiteWrapper, Circuit circuit){
-		Evaluator evaluator = suiteWrapper.getSuite().getEvaluator();
-		TrainingSet trainingSet = suiteWrapper.getSuite().getTrainingSet();
+
+	public static void evaluate(SuiteWrapper suiteWrapper, Circuit circuit) {
+		evaluate(suiteWrapper.getSuite(), circuit);
+	}
+
+	public static void evaluate(Suite suite, Circuit circuit) {
+		Evaluator evaluator = suite.getEvaluator();
+		TrainingSet trainingSet = suite.getTrainingSet();
 		evaluator.evaluate(trainingSet, circuit);
 	}
 

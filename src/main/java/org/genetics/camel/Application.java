@@ -72,20 +72,9 @@ public class Application {
             logger.info("Camel Context is going to be started...");
             camelContext.start();
 
-            ProducerTemplate template = camelContext.createProducerTemplate();
-            template.sendBody("seda:loop", "tick");
+            //ProducerTemplate template = camelContext.createProducerTemplate();
+            //template.sendBody("seda:loop", "tick");
 
-            for (int i = 0; i < 100000; i++) {
-                SedaEndpoint generator = (SedaEndpoint) camelContext.getEndpoint(GenericRoute.sedaGenerator());
-                SedaEndpoint simplifier = (SedaEndpoint) camelContext.getEndpoint(GenericRoute.sedaSimplifier());
-                SedaEndpoint evaluator = (SedaEndpoint) camelContext.getEndpoint(GenericRoute.sedaEvaluator());
-                SedaEndpoint persist = (SedaEndpoint) camelContext.getEndpoint(GenericRoute.sedaPersist());
-                logger.info(String.format("Queue %d %d %d %d", generator.getCurrentQueueSize(), simplifier.getCurrentQueueSize(), evaluator.getCurrentQueueSize(), persist.getCurrentQueueSize()));
-                Thread.sleep(1000);
-            }
-
-
-            Thread.sleep(10000000);
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
             stopItQuitely(camelContext);

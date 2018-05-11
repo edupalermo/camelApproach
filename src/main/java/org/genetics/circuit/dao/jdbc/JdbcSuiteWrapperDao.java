@@ -74,6 +74,9 @@ public class JdbcSuiteWrapperDao implements SuiteWrapperDao {
 
 	@Override
 	public SuiteWrapper findLatest(Problem problem) {
+		if (problem == null) {
+			throw new RuntimeException("Cannot query SuiteWrapper with a null problem.");
+		}
     	return this.jdbcTemplate.queryForObject(SQL_SELECT_LAST, new Object[]{Integer.valueOf(problem.getId())}, rowMapper);
 	}
 

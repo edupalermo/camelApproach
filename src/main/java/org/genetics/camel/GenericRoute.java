@@ -1,5 +1,7 @@
 package org.genetics.camel;
 
+import org.apache.camel.Predicate;
+import org.apache.camel.builder.PredicateBuilder;
 import org.apache.camel.builder.RouteBuilder;
 import org.genetics.camel.configuration.Constants;
 import org.genetics.camel.predicate.GenerationPredicate;
@@ -10,65 +12,88 @@ import org.springframework.stereotype.Component;
 
 import java.util.Random;
 
+import static org.apache.camel.builder.PredicateBuilder.not;
+
 @Component
 public class GenericRoute extends RouteBuilder {
 
     private static final String CONCURRENT_CONSUMERS = "1";
-    private static final String QUEUE_SIZE = "1";
+    private static final String QUEUE_SIZE = "5";
 
+    private static final String PROBLEM_NAME = "CHAR_TYPE";
 
     @Override
     public void configure() throws Exception {
+
+        /*
         // This loop is the heart beat of the system
         from("seda:loop")
-                .log("Main loop ${body}")
+                //.log("Main loop ${body}")
                 .split(simple("TICK"))
                     .to(sedaGenerator())
                 .end()
                 .to("seda:loop");
+                */
 
         from(sedaGenerator())
-                //.delay(simple("${random(100, 500)}"))
-                .process("generatorMethodDefinitionProcessor")
-                .choice()
-                    .when(header(Constants.HEADER_GENERATOR_METHOD).isEqualTo(Constants.GENERATOR_METHOD_RANDOM))
-                        .process("randomGeneratorProcessor")
-                    .otherwise()
-                        .log("Unknow method type! ${headers.GENERATOR_METHOD}")
-                        .stop()
-                .end()
-                .log("Step 1 - Generated... ${body} ${headers.GENERATOR_METHOD}")
-                .to(sedaSimplifier());
-
-        from(sedaSimplifier())
-                //.delay(simple("${random(100, 500)}"))
-                .filter().ref("generationPredicate")
-                .process("simplifierProcessor")
-                //.transform(simple("${body.substring(8)}"))
-                .log("Step 2 - Simplifying... ${body}")
-                .to(sedaEvaluator());
+            //.delay(simple("${random(100, 500)}"))
+            .process("generatorMethodDefinitionProcessor")
+            .choice()
+                .when(header(Constants.HEADER_GENERATOR_METHOD).isEqualTo(Constants.GENERATOR_METHOD_RANDOM))
+                    .process("randomGeneratorProcessor")
+                    .endChoice()
+                .otherwise()
+                    .log("ERROR Unknow method type! ${headers.GENERATOR_METHOD}")
+                    .stop()
+            .end()
+            //.log("Step 1 - Generated... ${body} ${headers.GENERATOR_METHOD}")
+            .to(sedaEvaluator());
 
         from(sedaEvaluator())
-                //.delay(simple("${random(200, 600)}"))
-                .filter().ref("generationPredicate")
-                .process("evaluatorProcessor")
-                //.setHeader("grade", simple("${body}"))
-                .log("Step 3 - Evaluating... ${body}")
-                .to(sedaPersist());
+            //.delay(simple("${random(200, 600)}"))
+            .filter().ref("generationPredicate")
+            .process("evaluatorProcessor")
+            //.setHeader("grade", simple("${body}"))
+            //.log("Step 3 - Evaluating... ${body}")
+            .to(sedaUpdateMemoryPopulation());
 
-        from(sedaPersist())
-                //.resequence(header("grade")).stream()
-                .filter().ref("generationPredicate")
-                .delay(simple("${random(1000, 2000)}"))
-                .log("*********************************")
-                .log("Step 4 - Persisted... ${body}")
-                .log("*********************************");
+        from(sedaUpdateMemoryPopulation())
+            .filter().ref("generationPredicate")
+            .process("populationAddProcessor")
+            .choice()
+                .when(header(Constants.HEADER_POSITION).isEqualTo(Integer.valueOf(0))) // First should go to simplification
+                    .to(sedaSimplifier())
+                    .endChoice()
+                .when(header(Constants.HEADER_SIMPLIFIED).isEqualTo("1")) // If the circuit was simplified then send to DB
+                    .to(sedaUpdatePersistentPopulation())
+                    .endChoice()
+            .end();
 
-        // This will be triggered on startup
-        //from("timer://foo?repeatCount=1").to("seda:loop");
-        from("timer://foo?delay=1&repeatCount=1")
-                .setHeader(Constants.HEADER_PROBLEM_NAME, constant("CHAR_TYPE"))
-                .to("seda:loop");
+        from(sedaSimplifier())
+            //.delay(simple("${random(100, 500)}"))
+            .filter().ref("generationPredicate")
+            .process("simplifierProcessor")
+            .setHeader(Constants.HEADER_SIMPLIFIED, constant("1"))
+            //.transform(simple("${body.substring(8)}"))
+            //.log("Step 2 - Simplifying... ${body}")
+            .to(sedaEvaluator());
+
+        from(sedaUpdatePersistentPopulation())
+            .log("TO DATABASE!");
+
+
+        from("timer://timer1?delay=-1&fixedRate=false")
+            .split(simple("TICK"))
+                .setHeader(Constants.HEADER_PROBLEM_NAME, constant(PROBLEM_NAME))
+                .to(sedaGenerator())
+            .end();
+
+
+        // Dump Population status
+        from("timer://timer2?fixedRate=true&period=15000")
+            .setHeader(Constants.HEADER_PROBLEM_NAME, constant(PROBLEM_NAME))
+            .process("populationDumpProcessor");
+
 
     }
 
@@ -117,14 +142,12 @@ public class GenericRoute extends RouteBuilder {
         return sb.toString();
     }
 
-    public static String sedaPersist() {
+    public static String sedaUpdateMemoryPopulation() {
         StringBuffer sb = new StringBuffer();
 
-        sb.append("seda:persist?");
-        //sb.append("waitForTaskToComplete=Always&");
-        // sb.append("queue=generatorQueue&");
+        sb.append("seda:updateMemoryPopulation?");
         sb.append("size=").append(QUEUE_SIZE).append("&");
-         sb.append("multipleConsumers=true&");
+        sb.append("multipleConsumers=false&");
         sb.append("concurrentConsumers=1&");
         sb.append("limitConcurrentConsumers=1&");
         sb.append("blockWhenFull=true");
@@ -132,5 +155,32 @@ public class GenericRoute extends RouteBuilder {
         return sb.toString();
     }
 
+    public static String sedaPersist() {
+        StringBuffer sb = new StringBuffer();
+
+        sb.append("seda:persist?");
+        //sb.append("waitForTaskToComplete=Always&");
+        // sb.append("queue=generatorQueue&");
+        sb.append("size=").append(QUEUE_SIZE).append("&");
+         sb.append("multipleConsumers=false&");
+        sb.append("concurrentConsumers=1&");
+        sb.append("limitConcurrentConsumers=1&");
+        sb.append("blockWhenFull=true");
+
+        return sb.toString();
+    }
+
+    public static String sedaUpdatePersistentPopulation() {
+        StringBuffer sb = new StringBuffer();
+
+        sb.append("seda:updatePersistentPopulation?");
+        sb.append("size=").append(QUEUE_SIZE).append("&");
+        sb.append("multipleConsumers=false&");
+        sb.append("concurrentConsumers=1&");
+        sb.append("limitConcurrentConsumers=1&");
+        sb.append("blockWhenFull=true");
+
+        return sb.toString();
+    }
 
 }

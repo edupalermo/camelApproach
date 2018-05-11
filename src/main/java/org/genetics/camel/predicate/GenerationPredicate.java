@@ -12,7 +12,7 @@ public class GenerationPredicate implements Predicate {
     private static Logger logger = LoggerFactory.getLogger(GenerationPredicate.class);
 
     public boolean matches(Exchange exchange) {
-        logger.info("Filter!");
+        //logger.info("Filter!");
         return true;
     }
 }
