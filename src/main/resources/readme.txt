@@ -17,3 +17,5 @@ SHOW TABLES;
 # dont word wrap
 tput rmam
 # Re-enable tput smam
+
+mvn clean install spring-boot:run  -Dstart-class=org.genetics.camel.Application

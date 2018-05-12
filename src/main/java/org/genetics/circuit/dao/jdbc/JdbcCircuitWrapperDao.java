@@ -116,10 +116,15 @@ public class JdbcCircuitWrapperDao implements CircuitWrapperDao {
 	public int getTotal(SuiteWrapper suiteWrapper) {
 		String sql = "SELECT count(*) FROM circuit WHERE suite_id = ?";
 		
-		Problem problem = suiteWrapper.getProblem();
-        return jdbcTemplate.queryForObject(sql, new Object[] { problem.getId(), suiteWrapper.getId() }, Integer.class);
+        return jdbcTemplate.queryForObject(sql, new Object[] { suiteWrapper.getId() }, Integer.class);
 	}
 
-	
-	
+	@Override
+	public void delete(SuiteWrapper suiteWrapper, int position) {
+		String deleteSql = "DELETE FROM CIRCUIT WHERE SUITE_ID = ? AND POSITION = ?";
+		jdbcTemplate.update(deleteSql, new Object[] {suiteWrapper.getId(), position});
+
+		String updateSql = "UPDATE CIRCUIT SET POSITION = POSITION - 1 WHERE SUITE_ID = ? and POSITION >= ?";
+		jdbcTemplate.update(updateSql, new Object[] {suiteWrapper.getId(), position});
+	}
 }

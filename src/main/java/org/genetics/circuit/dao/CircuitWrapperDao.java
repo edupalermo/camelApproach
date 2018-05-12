@@ -14,4 +14,6 @@ public interface CircuitWrapperDao {
 
 	int getTotal(SuiteWrapper suiteWrapper);
 
+	void delete(SuiteWrapper suiteWrapper, int position);
+
 }

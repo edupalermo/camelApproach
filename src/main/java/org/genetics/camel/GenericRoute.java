@@ -1,25 +1,14 @@
 package org.genetics.camel;
 
-import org.apache.camel.Predicate;
-import org.apache.camel.builder.PredicateBuilder;
 import org.apache.camel.builder.RouteBuilder;
-import org.genetics.camel.aggregationstrategy.KeepBestAggregationStrategy;
 import org.genetics.camel.configuration.Constants;
-import org.genetics.camel.predicate.GenerationPredicate;
-import org.genetics.camel.processor.EvaluatorProcessor;
-import org.genetics.camel.processor.GeneratorProcessor;
-import org.genetics.camel.processor.SimplifierProcessor;
 import org.springframework.stereotype.Component;
-
-import java.util.Random;
-
-import static org.apache.camel.builder.PredicateBuilder.not;
 
 @Component
 public class GenericRoute extends RouteBuilder {
 
     private static final String CONCURRENT_CONSUMERS = "5";
-    private static final String QUEUE_SIZE = "10";
+    private static final String QUEUE_SIZE = "20";
 
     private static final String PROBLEM_NAME = "CHAR_TYPE";
 
@@ -27,7 +16,7 @@ public class GenericRoute extends RouteBuilder {
     public void configure() throws Exception {
 
         from(sedaGenerator())
-            //.delay(simple("${random(100, 500)}"))
+            .setHeader(Constants.HEADER_POPULATION_GENERATION, method("populationService", "getGenerationId"))
             .process("generatorMethodDefinitionProcessor")
             .choice()
                 .when(header(Constants.HEADER_GENERATOR_METHOD).isEqualTo(Constants.GENERATOR_METHOD_RANDOM))
@@ -36,59 +25,60 @@ public class GenericRoute extends RouteBuilder {
                 .when(header(Constants.HEADER_GENERATOR_METHOD).isEqualTo(Constants.GENERATOR_METHOD_MIX_EXISTING))
                     .process("mixExistingGeneratorProcessor")
                     .endChoice()
+                .when(header(Constants.HEADER_GENERATOR_METHOD).isEqualTo(Constants.GENERATOR_METHOD_ENRICH_EXISTING))
+                    .process("enrichExistingGeneratorProcessor")
+                    .endChoice()
+                .when(header(Constants.HEADER_GENERATOR_METHOD).isEqualTo(Constants.GENERATOR_METHOD_MIGRATE_RANDOM_FROM_DATABASE))
+                    .process("migrateRandomFromDatabaseGeneratorProcessor")
+                    .endChoice()
                 .otherwise()
                     .log("ERROR Unknow method type! ${headers.GENERATOR_METHOD}")
-                    .stop()
             .end()
-                .filter(body().isNotNull())
-            //.log("Step 1 - Generated... ${body} ${headers.GENERATOR_METHOD}")
+            .filter(body().isNotNull())
             .to(sedaEvaluator());
 
         from(sedaEvaluator())
-            //.delay(simple("${random(200, 600)}"))
-            .filter().ref("generationPredicate")
+            .filter(header(Constants.HEADER_POPULATION_GENERATION).isEqualTo(method("populationService", "getGenerationId")))
             .process("evaluatorProcessor")
-            //.setHeader("grade", simple("${body}"))
-            //.log("Step 3 - Evaluating... ${body}")
-            .to(sedaUpdateMemoryPopulation());
+            .to(sedaSimplifier());
+
+        from(sedaSimplifier())
+                .filter(header(Constants.HEADER_POPULATION_GENERATION).isEqualTo(method("populationService", "getGenerationId")))
+                .filter().ref("topFilterPredicate")
+                .filter().ref("suiteWrapperPredicate")
+                .process("simplifierProcessor")
+                .to(sedaUpdateMemoryPopulation());
 
         from(sedaUpdateMemoryPopulation())
             .filter().ref("generationPredicate")
+            .filter().ref("suiteWrapperPredicate")
             .process("populationAddProcessor")
             .choice()
                 .when(header(Constants.HEADER_POSITION).isEqualTo(Integer.valueOf(0))) // First should go to simplification
-                    .to(sedaSimplifier())
-                    .endChoice()
-                .when(header(Constants.HEADER_SIMPLIFIED).isEqualTo("1")) // If the circuit was simplified then send to DB
+                    .log("TOP TOP TOP!")
                     .to(sedaUpdatePersistentPopulation())
                     .endChoice()
             .end();
 
-        from(sedaSimplifier())
-            //.delay(simple("${random(100, 500)}"))
-            .filter().ref("generationPredicate")
-            .process("simplifierProcessor")
-            .setHeader(Constants.HEADER_SIMPLIFIED, constant("1"))
-            //.transform(simple("${body.substring(8)}"))
-            //.log("Step 2 - Simplifying... ${body}")
-            .to(sedaEvaluator());
-
         from(sedaUpdatePersistentPopulation())
-            .log("TO DATABASE!");
+            .process("persistDatabaseProcessor");
 
 
-        // Heat beat of circuit generation
+        // Heart beat of circuit generation
         from("timer://timer1?delay=-1&fixedRate=false")
             .split(simple("TICK"))
-                .setHeader(Constants.HEADER_PROBLEM_NAME, constant(PROBLEM_NAME))
                 .to(sedaGenerator())
             .end();
 
-
         // Dump Population status
-        from("timer://timer2?fixedRate=true&period=15000")
-            .setHeader(Constants.HEADER_PROBLEM_NAME, constant(PROBLEM_NAME))
-            .process("populationDumpProcessor");
+        from("timer://timer2?period=15s")
+                .process("populationDumpProcessor");
+
+        from("timer://timer3?delay=1m&period=10m")
+                .process("killerProcessor");
+
+
+
 
         /*
         from("timer://timerTest?delay=150&fixedRate=false&repeatCount=20")
@@ -112,6 +102,7 @@ public class GenericRoute extends RouteBuilder {
         // sb.append("queue=generatorQueue&");
         sb.append("size=").append(QUEUE_SIZE).append("&");
         sb.append("multipleConsumers=true&");
+        sb.append("purgeWhenStopping=true&");
         sb.append("concurrentConsumers=").append(CONCURRENT_CONSUMERS).append("&");
         sb.append("limitConcurrentConsumers=").append(CONCURRENT_CONSUMERS).append("&");
         sb.append("blockWhenFull=true");
@@ -127,6 +118,7 @@ public class GenericRoute extends RouteBuilder {
         // sb.append("queue=generatorQueue&");
         sb.append("size=").append(QUEUE_SIZE).append("&");
         sb.append("multipleConsumers=true&");
+        sb.append("purgeWhenStopping=true&");
         sb.append("concurrentConsumers=").append(CONCURRENT_CONSUMERS).append("&");
         sb.append("limitConcurrentConsumers=").append(CONCURRENT_CONSUMERS).append("&");
         sb.append("blockWhenFull=true");
@@ -142,6 +134,7 @@ public class GenericRoute extends RouteBuilder {
         // sb.append("queue=generatorQueue&");
         sb.append("size=").append(QUEUE_SIZE).append("&");
         sb.append("multipleConsumers=true&");
+        sb.append("purgeWhenStopping=true&");
         sb.append("concurrentConsumers=").append(CONCURRENT_CONSUMERS).append("&");
         sb.append("limitConcurrentConsumers=").append(CONCURRENT_CONSUMERS).append("&");
         sb.append("blockWhenFull=true");
@@ -155,6 +148,7 @@ public class GenericRoute extends RouteBuilder {
         sb.append("seda:updateMemoryPopulation?");
         sb.append("size=").append(QUEUE_SIZE).append("&");
         sb.append("multipleConsumers=false&");
+        sb.append("purgeWhenStopping=true&");
         sb.append("concurrentConsumers=1&");
         sb.append("limitConcurrentConsumers=1&");
         sb.append("blockWhenFull=true");
@@ -169,7 +163,8 @@ public class GenericRoute extends RouteBuilder {
         //sb.append("waitForTaskToComplete=Always&");
         // sb.append("queue=generatorQueue&");
         sb.append("size=").append(QUEUE_SIZE).append("&");
-         sb.append("multipleConsumers=false&");
+        sb.append("multipleConsumers=false&");
+        sb.append("purgeWhenStopping=true&");
         sb.append("concurrentConsumers=1&");
         sb.append("limitConcurrentConsumers=1&");
         sb.append("blockWhenFull=true");
@@ -183,6 +178,7 @@ public class GenericRoute extends RouteBuilder {
         sb.append("seda:updatePersistentPopulation?");
         sb.append("size=").append(QUEUE_SIZE).append("&");
         sb.append("multipleConsumers=false&");
+        sb.append("purgeWhenStopping=true&");
         sb.append("concurrentConsumers=1&");
         sb.append("limitConcurrentConsumers=1&");
         sb.append("blockWhenFull=true");
@@ -196,6 +192,7 @@ public class GenericRoute extends RouteBuilder {
         sb.append("seda:Test?");
         sb.append("multipleConsumers=false&");
         sb.append("concurrentConsumers=1&");
+        sb.append("purgeWhenStopping=true&");
         sb.append("limitConcurrentConsumers=1&");
         sb.append("blockWhenFull=true&");
         sb.append("purgeWhenStopping=true");

@@ -3,10 +3,10 @@ package org.genetics.camel.processor.population;
 import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
 import org.genetics.camel.configuration.Constants;
+import org.genetics.camel.service.SuiteWrapperController;
 import org.genetics.circuit.circuit.Circuit;
 import org.genetics.circuit.entity.SuiteWrapper;
 import org.genetics.circuit.service.PopulationService;
-import org.genetics.circuit.service.SuiteWrapperService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,17 +19,15 @@ public class PopulationAddProcessor implements Processor {
 
     @Autowired private PopulationService populationService;
 
-    @Autowired private SuiteWrapperService suiteWrapperService;
+    @Autowired private SuiteWrapperController suiteWrapperController;
 
     public synchronized void process(Exchange exchange) throws Exception {
         Circuit circuit = exchange.getIn().getBody(Circuit.class);
-        String problemName = exchange.getIn().getHeader(Constants.HEADER_PROBLEM_NAME, String.class);
+        String initialGenerationId = exchange.getIn().getHeader(Constants.HEADER_POPULATION_GENERATION, String.class);
 
-        SuiteWrapper suiteWrapper = suiteWrapperService.getLatest(problemName);
+        SuiteWrapper suiteWrapper = suiteWrapperController.getSuiteWrapper();
 
-        exchange.getIn().setHeader(Constants.HEADER_OLD_BETTER, populationService.getFirst());
-
-        int position = populationService.orderedAdd(suiteWrapper, circuit);
+        int position = populationService.orderedAdd(suiteWrapper, initialGenerationId, circuit);
 
         exchange.getIn().setHeader(Constants.HEADER_POSITION, new Integer(position));
     }

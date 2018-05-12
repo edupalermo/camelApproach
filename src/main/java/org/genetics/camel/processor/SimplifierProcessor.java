@@ -2,16 +2,14 @@ package org.genetics.camel.processor;
 
 import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
-import org.genetics.camel.configuration.Constants;
+import org.genetics.camel.service.SuiteWrapperController;
 import org.genetics.circuit.circuit.Circuit;
 import org.genetics.circuit.circuit.CircuitScramble;
-import org.genetics.circuit.circuit.CircuitToString;
 import org.genetics.circuit.entity.SuiteWrapper;
 import org.genetics.circuit.problem.CircuitComparator;
 import org.genetics.circuit.problem.TrainingSet;
-import org.genetics.circuit.service.SuiteWrapperService;
+import org.genetics.circuit.service.PopulationService;
 import org.genetics.circuit.utils.CircuitUtils;
-import org.genetics.circuit.utils.IoUtils;
 import org.genetics.circuit.utils.SuiteWrapperUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,13 +22,21 @@ public class SimplifierProcessor implements Processor {
     private static final Logger logger = LoggerFactory.getLogger(SimplifierProcessor.class);
 
     @Autowired
-    private SuiteWrapperService suiteWrapperService;
+    private SuiteWrapperController suiteWrapperController;
+
+    @Autowired
+    private PopulationService populationService;
+
+    // exchange.setProperty(Exchange.ROUTE_STOP, Boolean.TRUE);
 
     public void process(Exchange exchange) throws Exception {
-        Circuit newBetter = exchange.getIn().getBody(Circuit.class);
-        SuiteWrapper suiteWrapper = suiteWrapperService.getLatest(exchange.getIn().getHeader(Constants.HEADER_PROBLEM_NAME, String.class));
+
+        SuiteWrapper suiteWrapper = suiteWrapperController.getSuiteWrapper();
         TrainingSet trainingSet = suiteWrapper.getSuite().getTrainingSet();
-        Circuit oldBetter = (Circuit) exchange.getIn().getHeader(Constants.HEADER_OLD_BETTER, Circuit.class);
+        CircuitComparator circuitComparator = suiteWrapper.getSuite().getCircuitComparator();
+
+        Circuit newBetter = exchange.getIn().getBody(Circuit.class);
+        Circuit oldBetter = populationService.getFirst();
 
 
         if (oldBetter != null) {
@@ -41,33 +47,15 @@ public class SimplifierProcessor implements Processor {
             simplify(trainingSet, c2);
             SuiteWrapperUtil.evaluate(suiteWrapper, c2);
 
-            logger.info(String.format("OldBetter: %s", CircuitToString.toSmallString(suiteWrapper, oldBetter)));
-            logger.info(String.format("NewBetter: %s", CircuitToString.toSmallString(suiteWrapper, newBetter)));
-            logger.info(String.format("n - o    : %s", CircuitToString.toSmallString(suiteWrapper, c1)));
-            logger.info(String.format("o - n    : %s", CircuitToString.toSmallString(suiteWrapper, c2)));
-
-
-            CircuitComparator comparator = suiteWrapper.getSuite().getCircuitComparator();
-            if ((comparator.compare(oldBetter, c1) < 0) || (comparator.compare(oldBetter, c2) < 0) ||
-                    (comparator.compare(newBetter, c1) < 0) || (comparator.compare(newBetter, c2) < 0)) {
-                logger.info("Inconsistency!");
-                logger.info("OldBetter: " + IoUtils.objectToBase64(oldBetter));
-                logger.info("NewBetter: " + IoUtils.objectToBase64(newBetter));
-
-            }
-
-
-            exchange.getOut().setBody(getBetter(suiteWrapper.getSuite().getCircuitComparator(), oldBetter, newBetter, c1, c2).clone());
+            Circuit newCircuit = getBetter(circuitComparator, c1, c2);
+            exchange.getOut().setBody(newCircuit);
         }
         else {
             Circuit c1 = (Circuit) newBetter.clone();
             simplify(trainingSet, c1);
             SuiteWrapperUtil.evaluate(suiteWrapper, c1);
 
-            logger.info(String.format("NewBetter: %s", CircuitToString.toSmallString(suiteWrapper, newBetter)));
-            logger.info(String.format("n - o    : %s", CircuitToString.toSmallString(suiteWrapper, c1)));
-
-            exchange.getOut().setBody(getBetter(suiteWrapper.getSuite().getCircuitComparator(), newBetter, c1).clone());
+            exchange.getOut().setBody(c1);
         }
 
         exchange.getOut().setHeaders(exchange.getIn().getHeaders());
@@ -94,7 +82,7 @@ public class SimplifierProcessor implements Processor {
             }
         }
 
-        logger.info(String.format("Better index [%d]", index));
+        //logger.info(String.format("Better index [%d]", index));
 
         return c[index];
 

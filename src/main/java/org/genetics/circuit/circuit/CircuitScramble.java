@@ -20,17 +20,17 @@ public class CircuitScramble {
 		return answer;
 	}
 	
-	public static Circuit scramble(TrainingSet trainingSet, Circuit c1, Circuit c2) {
+	public static Circuit mix(TrainingSet trainingSet, Circuit c1, Circuit c2) {
 		if (c1 == c2) {
 			c2 = (Circuit) c1.clone();
 		}
-		Circuit answer = realScramble(c1, c2); 
+		Circuit answer = realMix(c1, c2);
 		
 		return answer;
 	}
 	
 	
-	private static Circuit realScramble(Circuit c1, Circuit c2) {
+	private static Circuit realMix(Circuit c1, Circuit c2) {
 		
 		ThreadLocalRandom random = ThreadLocalRandom.current();
 		

@@ -6,11 +6,17 @@ import org.genetics.circuit.dao.CircuitWrapperDao;
 import org.genetics.circuit.dao.LockDao;
 import org.genetics.circuit.entity.SuiteWrapper;
 import org.genetics.circuit.utils.SuiteWrapperUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
 public class CircuitService {
+
+	private static final Logger logger = LoggerFactory.getLogger(CircuitService.class);
+
+	private static final int POPULATION_LIMIT = 10000;
 
 	@Autowired
 	private CircuitWrapperDao circuitWrapperDao;
@@ -23,23 +29,24 @@ public class CircuitService {
 		String lockKey = null;
 		int position = -1;
 		try {
-			if ((lockKey = lockDao.lock()) != null) {
-				
-				Limits limits = new Limits(circuitWrapperDao.getTotal(suiteWrapper));
-				
-				position = searchPositionToAdd(suiteWrapper, circuit, limits);
-				
-				if (position < 0) {
-					int realPosition = ~position;
-					circuitWrapperDao.updatePositions(suiteWrapper, realPosition);
-					circuitWrapperDao.create(suiteWrapper, circuit, realPosition);
-					
-				}
+			lockKey = lock();
+
+			Limits limits = new Limits(circuitWrapperDao.getTotal(suiteWrapper));
+
+			position = searchPositionToAdd(suiteWrapper, circuit, limits);
+
+			if (position < 0) {
+				int realPosition = ~position;
+				circuitWrapperDao.updatePositions(suiteWrapper, realPosition);
+				circuitWrapperDao.create(suiteWrapper, circuit, realPosition);
+
 			}
-			else {
-				System.err.println("Fail to lock database!");
+
+			int size = 0;
+			while ((size = circuitWrapperDao.getTotal(suiteWrapper)) > POPULATION_LIMIT) {
+				circuitWrapperDao.delete(suiteWrapper, size - 1);
 			}
-			
+
 		} finally {
 			lockDao.release(lockKey);
 		}
@@ -52,13 +59,9 @@ public class CircuitService {
 		
 		String lockKey = null;
 		try {
-			if ((lockKey = lockDao.lock()) != null) {
-				circuit = circuitWrapperDao.findByPosition(suiteWrapper, position);
-			}
-			else {
-				System.err.println("Fail to lock database!");
-			}
-			
+			lockKey = lock();
+			circuit = circuitWrapperDao.findByPosition(suiteWrapper, position);
+
 		} finally {
 			lockDao.release(lockKey);
 		}
@@ -71,13 +74,9 @@ public class CircuitService {
 		
 		String lockKey = null;
 		try {
-			if ((lockKey = lockDao.lock()) != null) {
-				size = circuitWrapperDao.getTotal(suiteWrapper);
-			}
-			else {
-				System.err.println("Fail to lock database!");
-			}
-			
+			lockKey = lock();
+			size = circuitWrapperDao.getTotal(suiteWrapper);
+
 		} finally {
 			lockDao.release(lockKey);
 		}
@@ -103,6 +102,28 @@ public class CircuitService {
 		}
 		
 		return position;
+	}
+
+	private String lock() {
+		String lockKey = null;
+
+		int count = 0;
+
+		while ((lockKey = lockDao.lock()) == null) {
+			logger.warn("Fail to lock database access!");
+			count++;
+			try {
+				Thread.sleep(500);
+			} catch (InterruptedException e) {
+				throw new RuntimeException(e);
+			}
+
+			if (lockKey == null && count >= 10) {
+				throw new RuntimeException(String.format("Fail to obtain lock after %d attempts", count));
+			}
+		}
+
+		return lockKey;
 	}
 	
 	public static final class Limits {
