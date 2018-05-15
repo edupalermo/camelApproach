@@ -1,26 +1,25 @@
-package org.genetics.circuit.service;
+package org.genetics.camel.mediator;
 
 import org.genetics.circuit.circuit.Circuit;
-import org.genetics.circuit.circuit.CircuitToString;
+import org.genetics.circuit.circuit.CircuitContextDecorator;
 import org.genetics.circuit.entity.SuiteWrapper;
-import org.genetics.circuit.problem.CircuitComparator;
 import org.genetics.circuit.utils.CircuitUtils;
 import org.genetics.circuit.utils.RandomUtils;
-import org.genetics.circuit.utils.SuiteWrapperUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.text.DecimalFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
 
 @Component
-public class PopulationService {
+public class MemoryPopulationMediator {
 
-    private static final Logger logger = LoggerFactory.getLogger(PopulationService.class);
+    private static final Logger logger = LoggerFactory.getLogger(MemoryPopulationMediator.class);
 
-    private static final List<Circuit> population = new ArrayList<Circuit>();
+    private static final List<CircuitContextDecorator> population = new ArrayList<CircuitContextDecorator>();
     private static String generationId = UUID.randomUUID().toString();
     private static int actualSuiteWrapperId = -1;
 
@@ -38,42 +37,26 @@ public class PopulationService {
         Circuit betterCircuit = population.get(0);
 
         for (int i = 0; i < Math.min(DUMP_LIMIT_MIN, population.size()); i++) {
-            logger.info(String.format("[%5d] %s", i + 1, CircuitToString.toSmallString(suiteWrapper, population.get(i))));
+            logger.info(String.format("[%5d] %s", i + 1, population.get(i).toString()));
             // logger.info(String.format("[%5d] %s", i + 1, CircuitToString.toString(evaluator, population.get(i))));
         }
 
         if (population.size() > 3) {
             int limit = Math.min(POPULATION_MAX_SIZE, population.size());
             for (int i = limit - 3; i < limit; i++) {
-                logger.info(String.format("[%5d] %s %.3f", i + 1, CircuitToString.toSmallString(suiteWrapper, population.get(i)), SuiteWrapperUtil.similarity(suiteWrapper, betterCircuit, population.get(i))));
+                logger.info(String.format("[%5d] %s %.3f", i + 1, population.get(i).toString(), betterCircuit.similarity(population.get(i))));
             }
         }
 
-        DecimalFormat myFormatter = new DecimalFormat("###,###");
         int populationSize = population.size();
         int totalHits = CircuitUtils.getTotalOfPossibleHits(suiteWrapper);
-        int totalOfPorts = sumTotalOfPort(population);
-        String quantityOfPorts = myFormatter.format(totalOfPorts);
-
-        double workload = 1000d * ((double)populationSize / (double)totalOfPorts);
 
         logger.info(String.format("Population [%d] Total Hits [%d]", populationSize, totalHits));
-        logger.info(String.format("Total of Ports [%s] Workload [%.2f]", quantityOfPorts, workload));
-
     }
 
-    private static int sumTotalOfPort(List<Circuit> population) {
-        int total = 0;
+    public synchronized int orderedAdd(String initialGenerationId, CircuitContextDecorator newCircuit) {
 
-        for (Circuit circuit : population) {
-            total += circuit.size();
-        }
-        return total;
-    }
-
-    public synchronized int orderedAdd(int usedSuiteWrapper, String initialGenerationId, Circuit newCircuit) {
-
-        if (!initialGenerationId.equals(this.getGenerationId())) {
+        if (!initialGenerationId.equals(this.generationId)) {
             return -1;
         }
 
@@ -85,20 +68,11 @@ public class PopulationService {
             throw new RuntimeException("Population cannot be null!");
         }
 
-        if (actualSuiteWrapperId == -1) {
-            this.actualSuiteWrapperId = suiteWrapperService.getLatest()
-        }
-
-        CircuitComparator comparator = suiteWrapper.getSuite().getCircuitComparator();
-        if (comparator == null) {
-            throw new RuntimeException("Comparator cannot be null!");
-        }
-
-        if (!hasTopPosition(comparator, newCircuit)) {
+        if (!hasTopPosition(newCircuit)) {
             return -1;
         }
 
-        int pos = Collections.binarySearch(population, newCircuit, comparator);
+        int pos = Collections.binarySearch(population, newCircuit);
         if (pos < 0) {
             pos = ~pos;
             if (pos <= POPULATION_MAX_SIZE) {
@@ -115,8 +89,13 @@ public class PopulationService {
         return pos;
     }
 
-    public synchronized Circuit getFirst() {
-        Circuit circuit = null;
+    private int orderedAdd() {
+
+        return 0;
+    }
+
+    public synchronized CircuitContextDecorator getFirst() {
+        CircuitContextDecorator circuit = null;
         if (population.size() > 0) {
             circuit = population.get(0);
         }
@@ -131,31 +110,27 @@ public class PopulationService {
         return circuit;
     }
 
-    public synchronized Circuit getWeightedRandom() {
-        Circuit circuit = null;
+    public synchronized CircuitContextDecorator getWeightedRandom() {
+        CircuitContextDecorator circuit = null;
         if (population.size() > 0) {
             circuit = population.get(RandomUtils.raffle(population.size()));
         }
         return circuit;
     }
 
-    private boolean hasTopPosition(Comparator comparator, Circuit circuit) {
+    private boolean hasTopPosition(CircuitContextDecorator newCircuit) {
 
         boolean hasTopPosition = true;
 
         if (population.size() >= POPULATION_MAX_SIZE) {
-            if (comparator.compare(circuit, population.get(population.size() - 1)) >= 0) {
+            if (newCircuit.compareTo(population.get(population.size() - 1)) >= 0) {
                 hasTopPosition = false;
             }
         }
         return hasTopPosition;
     }
 
-    public synchronized boolean hasTopPosition(SuiteWrapper suiteWrapper, Circuit newCircuit) {
-        return hasTopPosition(suiteWrapper.getSuite().getCircuitComparator(), newCircuit);
-    }
-
-    public synchronized void kill() {
+    public synchronized void reset() {
         population.clear();
         this.generationId = UUID.randomUUID().toString();
     }
@@ -164,8 +139,10 @@ public class PopulationService {
         return this.generationId;
     }
 
+    /*
     public synchronized int getSize() {
         return this.population.size();
     }
+    */
 
 }

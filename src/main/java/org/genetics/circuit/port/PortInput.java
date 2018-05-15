@@ -26,10 +26,10 @@ public class PortInput extends Port {
 		
 		return equals;
 	}
-	
+
 	@Override
 	public void adustLeft(int index) {
-		throw new RuntimeException("Inconsistency");
+		throw new RuntimeException("Not suported");
 	}
 
 	public int getIndex() {

@@ -31,13 +31,13 @@ public class PortAnd extends Port {
 		
 		return equals;
 	}
-	
+
 	@Override
 	public void adustLeft(int index) {
 		if (minor > index) {
 			this.minor--;
 		}
-		
+
 		if (major > index) {
 			this.major--;
 		}

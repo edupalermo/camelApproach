@@ -8,6 +8,4 @@ public interface Suite extends Serializable {
 	
 	TrainingSet getTrainingSet();
 	
-	CircuitComparator getCircuitComparator();
-	
 }

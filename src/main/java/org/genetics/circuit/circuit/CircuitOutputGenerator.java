@@ -5,6 +5,7 @@ import org.genetics.circuit.pool.StatePool;
 import org.genetics.circuit.problem.TrainingSet;
 import org.genetics.circuit.solution.Solution;
 import org.genetics.circuit.solution.TimeSlice;
+import org.genetics.circuit.utils.CircuitUtils;
 
 public class CircuitOutputGenerator {
 
@@ -12,12 +13,14 @@ public class CircuitOutputGenerator {
 
 	public static int[] generateOutput(TrainingSet trainingSet, Circuit circuit) {
 
+		CircuitImpl circuitImpl = CircuitUtils.getCircuitImpl(circuit);
+
 		final int outputSize = trainingSet.getOutputSize();
 
-		int score[][] = new int[circuit.size()][outputSize];
+		int score[][] = new int[circuitImpl.size()][outputSize];
 
 		for (Solution solution : trainingSet.getSolutions()) {
-			evaluate(circuit, solution, score);
+			evaluate(circuitImpl, solution, score);
 		}
 
 		return generateOutput(score, outputSize);
@@ -41,7 +44,7 @@ public class CircuitOutputGenerator {
 		return output;
 	}
 
-	private static void evaluate(Circuit circuit, Solution solution, int[][] score) {
+	private static void evaluate(CircuitImpl circuit, Solution solution, int[][] score) {
 		boolean state[] = null;
 
 		try {

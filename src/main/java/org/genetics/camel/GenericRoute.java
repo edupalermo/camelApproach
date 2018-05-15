@@ -16,7 +16,7 @@ public class GenericRoute extends RouteBuilder {
     public void configure() throws Exception {
 
         from(sedaGenerator())
-            .setHeader(Constants.HEADER_POPULATION_GENERATION, method("populationService", "getGenerationId"))
+            .setHeader(Constants.HEADER_POPULATION_GENERATION, method("memoryPopulationMediator", "getGenerationId"))
             .process("generatorMethodDefinitionProcessor")
             .choice()
                 .when(header(Constants.HEADER_GENERATOR_METHOD).isEqualTo(Constants.GENERATOR_METHOD_RANDOM))
@@ -35,23 +35,21 @@ public class GenericRoute extends RouteBuilder {
                     .log("ERROR Unknow method type! ${headers.GENERATOR_METHOD}")
             .end()
             .filter(body().isNotNull())
-            .to(sedaEvaluator());
+            .to(sedaEnricher());
 
-        from(sedaEvaluator())
-            .filter(header(Constants.HEADER_POPULATION_GENERATION).isEqualTo(method("populationService", "getGenerationId")))
-            .process("evaluatorProcessor")
+        from(sedaEnricher())
+            .filter(header(Constants.HEADER_POPULATION_GENERATION).isEqualTo(method("memoryPopulationMediator", "getGenerationId")))
+            .process("enricherProcessor")
+            .split(body())
             .to(sedaSimplifier());
 
         from(sedaSimplifier())
-                .filter(header(Constants.HEADER_POPULATION_GENERATION).isEqualTo(method("populationService", "getGenerationId")))
-                .filter().ref("topFilterPredicate")
-                .filter().ref("suiteWrapperPredicate")
+                .filter(header(Constants.HEADER_POPULATION_GENERATION).isEqualTo(method("memoryPopulationMediator", "getGenerationId")))
                 .process("simplifierProcessor")
                 .to(sedaUpdateMemoryPopulation());
 
         from(sedaUpdateMemoryPopulation())
             .filter().ref("generationPredicate")
-            .filter().ref("suiteWrapperPredicate")
             .process("populationAddProcessor")
             .choice()
                 .when(header(Constants.HEADER_POSITION).isEqualTo(Integer.valueOf(0))) // First should go to simplification
@@ -66,31 +64,18 @@ public class GenericRoute extends RouteBuilder {
 
         // Heart beat of circuit generation
         from("timer://timer1?delay=-1&fixedRate=false")
-            .split(simple("TICK"))
-                .to(sedaGenerator())
-            .end();
+                .setHeader(Constants.HEADER_PROBLEM_NAME, constant(PROBLEM_NAME))
+                .to(sedaGenerator());
 
         // Dump Population status
         from("timer://timer2?period=15s")
+                .setHeader(Constants.HEADER_PROBLEM_NAME, constant(PROBLEM_NAME))
                 .process("populationDumpProcessor");
 
+        /*
         from("timer://timer3?delay=1m&period=10m")
                 .process("killerProcessor");
-
-
-
-
-        /*
-        from("timer://timerTest?delay=150&fixedRate=false&repeatCount=20")
-                .setBody(simple("${random(1, 100)}"))
-                .log("g - ${body}")
-                .to(sedaTest());
-
-        from(sedaTest())
-                .aggregate(constant("true"), new KeepBestAggregationStrategy())
-                .log("pp - ${body}")
-                .delay(1000);
-         */
+                */
 
     }
 
@@ -126,7 +111,7 @@ public class GenericRoute extends RouteBuilder {
         return sb.toString();
     }
 
-    public static String sedaEvaluator() {
+    public static String sedaEnricher() {
         StringBuffer sb = new StringBuffer();
 
         sb.append("seda:evaluator?");

@@ -2,7 +2,8 @@ package org.genetics.camel.processor.generator;
 
 import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
-import org.genetics.camel.service.SuiteWrapperController;
+import org.genetics.camel.configuration.Constants;
+import org.genetics.camel.mediator.SuiteWrapperMediator;
 import org.genetics.circuit.circuit.Circuit;
 import org.genetics.circuit.circuit.CircuitRandomGenerator;
 import org.genetics.circuit.entity.SuiteWrapper;
@@ -16,11 +17,12 @@ import java.util.concurrent.ThreadLocalRandom;
 public class RandomGeneratorProcessor implements Processor {
 
     @Autowired
-    private SuiteWrapperController suiteWrapperController;
+    private SuiteWrapperMediator suiteWrapperMediator;
 
     @Override
     public void process(Exchange exchange) throws Exception {
-        SuiteWrapper suiteWrapper = suiteWrapperController.getSuiteWrapper();
+        String problemName = exchange.getIn().getHeader(Constants.HEADER_PROBLEM_NAME, String.class);
+        SuiteWrapper suiteWrapper = suiteWrapperMediator.getSuiteWrapper(problemName);
 
         ThreadLocalRandom random = ThreadLocalRandom.current();
         Circuit circuit = CircuitRandomGenerator.randomGenerate(SuiteWrapperUtil.getInputSize(suiteWrapper), random.nextInt(300, 1000), SuiteWrapperUtil.useMemory(suiteWrapper));

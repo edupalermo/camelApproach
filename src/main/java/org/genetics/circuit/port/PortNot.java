@@ -34,7 +34,7 @@ public class PortNot extends Port {
 			this.index--;
 		}
 	}
-	
+
 	@Override
 	public boolean references(int index) {
 		return index == this.index;

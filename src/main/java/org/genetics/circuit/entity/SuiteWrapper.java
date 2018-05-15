@@ -2,6 +2,7 @@ package org.genetics.circuit.entity;
 
 import org.genetics.circuit.problem.Suite;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
 

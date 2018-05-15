@@ -8,7 +8,7 @@ import org.genetics.circuit.solution.TimeSlice;
 
 public class CircuitHitsEvaluator {
 
-	public static int evaluate(TrainingSet trainingSet, Circuit circuit) {
+	public static int evaluate(TrainingSet trainingSet, CircuitImpl circuit) {
 
 		int score[][] = new int[circuit.size()][trainingSet.getOutputSize()];
 
@@ -34,7 +34,7 @@ public class CircuitHitsEvaluator {
 		return sum;
 	}
 
-	private static void evaluate(Circuit circuit, Solution solution, int[][] score) {
+	private static void evaluate(CircuitImpl circuit, Solution solution, int[][] score) {
 		boolean state[] = null;
 
 		try {

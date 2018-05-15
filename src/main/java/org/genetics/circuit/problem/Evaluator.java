@@ -6,7 +6,7 @@ import java.io.Serializable;
 
 
 public interface Evaluator extends Serializable {
-	
-	void evaluate(TrainingSet trainingSet, Circuit circuit);
+
+	EvaluationResult evaluate(TrainingSet trainingSet, Circuit circuit);
 	
 }

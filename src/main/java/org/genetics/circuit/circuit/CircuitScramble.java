@@ -11,26 +11,26 @@ import java.util.concurrent.ThreadLocalRandom;
 public class CircuitScramble {
 
 	// Circuit c1 is modified!
-	public static Circuit join(TrainingSet trainingSet, Circuit c1, Circuit c2) {
+	public static CircuitImpl join(CircuitImpl c1, CircuitImpl c2) {
 		if (c1 == c2) {
-			c2 = (Circuit) c1.clone();
+			c2 = c1.clone();
 		}
-		Circuit answer = realJoin(c1, c2); 
+		CircuitImpl answer = realJoin(c1, c2);
 		
 		return answer;
 	}
 	
-	public static Circuit mix(TrainingSet trainingSet, Circuit c1, Circuit c2) {
+	public static CircuitImpl mix(CircuitImpl c1, CircuitImpl c2) {
 		if (c1 == c2) {
-			c2 = (Circuit) c1.clone();
+			c2 = c1.clone();
 		}
-		Circuit answer = realMix(c1, c2);
+		CircuitImpl answer = realMix(c1, c2);
 		
 		return answer;
 	}
 	
 	
-	private static Circuit realMix(Circuit c1, Circuit c2) {
+	private static CircuitImpl realMix(CircuitImpl c1, CircuitImpl c2) {
 		
 		ThreadLocalRandom random = ThreadLocalRandom.current();
 		
@@ -55,7 +55,7 @@ public class CircuitScramble {
 		return c1;
 	}
 
-	private static Circuit realJoin(Circuit c1, Circuit c2) {
+	private static CircuitImpl realJoin(CircuitImpl c1, CircuitImpl c2) {
 		
 		Map<Integer, Integer> translation = new TreeMap<Integer, Integer>();
 		
@@ -76,7 +76,7 @@ public class CircuitScramble {
 
 	
 	
-	private static int getInputSize(Circuit c) {
+	private static int getInputSize(CircuitImpl c) {
 		int i = 0;
 		
 		while ((i < c.size()) && (c.get(i) instanceof PortInput)) {

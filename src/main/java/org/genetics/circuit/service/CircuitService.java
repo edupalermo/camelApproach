@@ -2,10 +2,11 @@ package org.genetics.circuit.service;
 
 
 import org.genetics.circuit.circuit.Circuit;
+import org.genetics.circuit.circuit.CircuitContextDecorator;
+import org.genetics.circuit.circuit.CircuitImpl;
 import org.genetics.circuit.dao.CircuitWrapperDao;
 import org.genetics.circuit.dao.LockDao;
 import org.genetics.circuit.entity.SuiteWrapper;
-import org.genetics.circuit.utils.SuiteWrapperUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,21 +25,22 @@ public class CircuitService {
 	@Autowired
 	private LockDao lockDao;
 	
-	public int orderedPersist(SuiteWrapper suiteWrapper, Circuit circuit) {
+	public int orderedPersist(CircuitContextDecorator circuitContextDecorator) {
 		
 		String lockKey = null;
 		int position = -1;
 		try {
 			lockKey = lock();
 
-			Limits limits = new Limits(circuitWrapperDao.getTotal(suiteWrapper));
+			Limits limits = new Limits(circuitWrapperDao.getTotal(circuitContextDecorator.getSuiteWrapper()));
 
-			position = searchPositionToAdd(suiteWrapper, circuit, limits);
+			position = searchPositionToAdd(circuitContextDecorator, limits);
+			SuiteWrapper suiteWrapper = circuitContextDecorator.getSuiteWrapper();
 
 			if (position < 0) {
 				int realPosition = ~position;
 				circuitWrapperDao.updatePositions(suiteWrapper, realPosition);
-				circuitWrapperDao.create(suiteWrapper, circuit, realPosition);
+				circuitWrapperDao.create(suiteWrapper, circuitContextDecorator.getRootCircuit(), realPosition);
 
 			}
 
@@ -85,20 +87,22 @@ public class CircuitService {
 	}
 	
 	
-	private int searchPositionToAdd(SuiteWrapper suiteWrapper, Circuit circuit, Limits limits) {
+	private int searchPositionToAdd(CircuitContextDecorator circuitContextDecorator, Limits limits) {
 		int position = 0; 
 		
 		if (!limits.shouldContinue()) {
 			 position = limits.getSearchResult();
 		}
 		else {
+			SuiteWrapper suiteWrapper = circuitContextDecorator.getSuiteWrapper();
+
 			int positionToEvaluate = limits.getPositionToEvaluate();
-			Circuit evaluate = circuitWrapperDao.findByPosition(suiteWrapper, positionToEvaluate);
-			SuiteWrapperUtil.evaluate(suiteWrapper, evaluate);
-			
-			limits.setComparationResult(positionToEvaluate, SuiteWrapperUtil.compare(suiteWrapper, evaluate, circuit));
-			
-			position = searchPositionToAdd(suiteWrapper, circuit, limits);
+			CircuitContextDecorator evaluate = new CircuitContextDecorator((CircuitImpl) circuitWrapperDao.findByPosition(suiteWrapper, positionToEvaluate));
+			evaluate.evaluate(suiteWrapper);
+
+			limits.setComparationResult(positionToEvaluate, evaluate.compareTo(circuitContextDecorator));
+
+			position = searchPositionToAdd(circuitContextDecorator, limits);
 		}
 		
 		return position;

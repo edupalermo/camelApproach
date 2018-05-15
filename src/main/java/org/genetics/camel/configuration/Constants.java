@@ -4,7 +4,7 @@ public interface Constants {
 
     public String HEADER_POSITION = "POSITION";
 
-    public String HEADER_SUITE_WRAPPER_ID = "SUITE_WRAPPER_ID";
+    public String HEADER_PROBLEM_NAME = "PROBLEM_NAME";
 
     public String HEADER_POPULATION_GENERATION = "POPULATION_GENERATION";
 

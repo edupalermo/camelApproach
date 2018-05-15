@@ -11,6 +11,8 @@ import java.util.TreeSet;
 
 import org.apache.log4j.Logger;
 import org.genetics.circuit.circuit.Circuit;
+import org.genetics.circuit.circuit.CircuitContextDecorator;
+import org.genetics.circuit.circuit.CircuitImpl;
 import org.genetics.circuit.circuit.CircuitOutputGenerator;
 import org.genetics.circuit.entity.SuiteWrapper;
 import org.genetics.circuit.pool.StatePool;
@@ -24,7 +26,7 @@ public class CircuitUtils {
 	private static final Logger logger = Logger.getLogger(CircuitUtils.class);
 
 	// Remove redundant ports
-	public static void simplify(TrainingSet trainingSet, Circuit circuit) {
+	public static void simplify(TrainingSet trainingSet, CircuitImpl circuit) {
 
 		Map<Integer, List<Integer>> same = new TreeMap<Integer, List<Integer>>(Collections.reverseOrder());
 
@@ -75,7 +77,7 @@ public class CircuitUtils {
 	}
 	
 	
-	public static void useLowerPortsWithSameOutput(TrainingSet trainingSet, Circuit circuit) {
+	public static void useLowerPortsWithSameOutput(TrainingSet trainingSet, CircuitImpl circuit) {
 		Map<Integer, List<Integer>> same = new TreeMap<Integer, List<Integer>>(Collections.reverseOrder());
 
 		for (Solution solution : trainingSet.getSolutions()) {
@@ -102,7 +104,7 @@ public class CircuitUtils {
 	}
 
 	
-	public static void removeOverhead(TrainingSet trainingSet, Circuit circuit) {
+	public static void removeOverhead(TrainingSet trainingSet, CircuitImpl circuit) {
 		int output[] =  CircuitOutputGenerator.generateOutput(trainingSet, circuit);
 		
 		int major = 0;
@@ -120,7 +122,7 @@ public class CircuitUtils {
 	
 	
 	// Remove ports not used by Output
-	public static void simplifyByRemovingUnsedPorts(TrainingSet trainingSet, Circuit circuit) {
+	public static void simplifyByRemovingUnsedPorts(TrainingSet trainingSet, CircuitImpl circuit) {
 
 		int output[] =  CircuitOutputGenerator.generateOutput(trainingSet, circuit);
 
@@ -144,7 +146,7 @@ public class CircuitUtils {
 	}
 
 	
-	private static void removeFromList(Circuit circuit, Set<Integer> canRemove, int index) {
+	private static void removeFromList(CircuitImpl circuit, Set<Integer> canRemove, int index) {
 		Port port = circuit.get(index); 
 		if (!(port instanceof PortInput)) {
 			if (!canRemove.remove(index)) { // If did not have then it has been removed before and don't need to continue
@@ -176,7 +178,7 @@ public class CircuitUtils {
 	}
 
 
-	private static void evaluateRepetition(Circuit circuit, Map<Integer, List<Integer>> same, Solution solution) {
+	private static void evaluateRepetition(CircuitImpl circuit, Map<Integer, List<Integer>> same, Solution solution) {
 		boolean state[] = null;
 		
 		try {
@@ -233,9 +235,29 @@ public class CircuitUtils {
 	}
 
 
-	public static void betterSimplify(TrainingSet trainingSet, Circuit circuit) {
+	public static void betterSimplify(TrainingSet trainingSet, CircuitImpl circuit) {
+		long t = System.currentTimeMillis();
 		useLowerPortsWithSameOutput(trainingSet, circuit);
+		logger.info("Phase 1: " + (System.currentTimeMillis() - t));
+		t = System.currentTimeMillis();
 		simplifyByRemovingUnsedPorts(trainingSet, circuit);
+		logger.info("Phase 2: " + (System.currentTimeMillis() - t));
+	}
+
+	public static CircuitImpl getCircuitImpl(Circuit circuit) {
+		CircuitImpl circuitImpl = null;
+
+		if (circuit instanceof CircuitContextDecorator) {
+			circuitImpl = ((CircuitContextDecorator) circuit).getRootCircuit();
+		}
+		else if (circuit instanceof CircuitImpl) {
+			circuitImpl = (CircuitImpl) circuit;
+		}
+		else {
+			throw new RuntimeException("Not possible to transform the input to CircuitImpl.");
+		}
+
+		return circuitImpl;
 	}
 
 }

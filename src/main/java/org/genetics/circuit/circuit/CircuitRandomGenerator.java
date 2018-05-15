@@ -5,8 +5,8 @@ import org.genetics.circuit.port.Port;
 
 public class CircuitRandomGenerator {
 	
-	public static Circuit randomGenerate(int inputSize, int quantityOfRandomPort, boolean useMemory) {
-		Circuit circuit = new Circuit(inputSize);
+	public static CircuitImpl randomGenerate(int inputSize, int quantityOfRandomPort, boolean useMemory) {
+		CircuitImpl circuit = new CircuitImpl(inputSize);
 		for (int i = 0; i < quantityOfRandomPort; i++) {
 			circuit.add(Port.random(circuit.size(), useMemory));
 		}
@@ -14,7 +14,7 @@ public class CircuitRandomGenerator {
 		return circuit;
 	}
 	
-	public static void randomEnrich(Circuit circuit, int quantityOfRandomPort, boolean useMemory) {
+	public static void randomEnrich(CircuitImpl circuit, int quantityOfRandomPort, boolean useMemory) {
 		for (int i = 0; i < quantityOfRandomPort; i++) {
 			circuit.add(Port.random(circuit.size(), useMemory));
 		}
