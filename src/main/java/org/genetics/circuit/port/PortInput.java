@@ -1,5 +1,6 @@
 package org.genetics.circuit.port;
 
+import java.util.List;
 import java.util.Map;
 
 public class PortInput extends Port {
@@ -31,6 +32,11 @@ public class PortInput extends Port {
 	public void adustLeft(int index) {
 		throw new RuntimeException("Not suported");
 	}
+
+	@Override
+	public void adustLeft(int[] indexed) {
+		throw new RuntimeException("Not suported");	}
+
 
 	public int getIndex() {
 		return index;
@@ -82,6 +88,11 @@ public class PortInput extends Port {
 	@Override
 	public void translate(Map<Integer, Integer> map) {
 		throw new RuntimeException("Inconsistency");
+	}
+
+	@Override
+	public int[] getReferences() {
+		return new int[] {};
 	}
 
 }

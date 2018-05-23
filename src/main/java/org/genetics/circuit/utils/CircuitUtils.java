@@ -124,7 +124,9 @@ public class CircuitUtils {
 	// Remove ports not used by Output
 	public static void simplifyByRemovingUnsedPorts(TrainingSet trainingSet, CircuitImpl circuit) {
 
+		//long initial = System.currentTimeMillis();
 		int output[] =  CircuitOutputGenerator.generateOutput(trainingSet, circuit);
+		//logger.info(String.format("Phase -1 %d", System.currentTimeMillis() - initial));
 
 		TreeSet<Integer> canRemove = new TreeSet<Integer>();
 
@@ -149,6 +151,11 @@ public class CircuitUtils {
 	private static void removeFromList(CircuitImpl circuit, Set<Integer> canRemove, int index) {
 		Port port = circuit.get(index); 
 		if (!(port instanceof PortInput)) {
+
+			if (canRemove.isEmpty()) {
+				return;
+			}
+
 			if (!canRemove.remove(index)) { // If did not have then it has been removed before and don't need to continue
 				return;
 			}
@@ -221,27 +228,30 @@ public class CircuitUtils {
 			StatePool.retrieve(state);
 		}
 	}
-	
-	public static int getTotalOfPossibleHits(SuiteWrapper suiteWrapper) {
+
+	public static int getTotalOfPossibleHits(TrainingSet trainingSet) {
+
+		return getTotalOfPossibleHitsPerPort(trainingSet) * trainingSet.getOutputSize();
+	}
+
+	public static int getTotalOfPossibleHitsPerPort(TrainingSet trainingSet) {
 		int answer = 0;
-		
-		for (Solution solution : suiteWrapper.getSuite().getTrainingSet().getSolutions()) {
-			for (TimeSlice timeSlice : solution) {
-				answer = answer + timeSlice.getOutput().length;
-			}
+
+		for (Solution solution : trainingSet.getSolutions()) {
+			answer += solution.size();
 		}
-		
+
 		return answer;
 	}
 
 
 	public static void betterSimplify(TrainingSet trainingSet, CircuitImpl circuit) {
-		long t = System.currentTimeMillis();
+		//long t = System.currentTimeMillis();
 		useLowerPortsWithSameOutput(trainingSet, circuit);
-		logger.info("Phase 1: " + (System.currentTimeMillis() - t));
-		t = System.currentTimeMillis();
+		//logger.info("Phase 1: " + (System.currentTimeMillis() - t));
+		//t = System.currentTimeMillis();
 		simplifyByRemovingUnsedPorts(trainingSet, circuit);
-		logger.info("Phase 2: " + (System.currentTimeMillis() - t));
+		//logger.info("Phase 2: " + (System.currentTimeMillis() - t));
 	}
 
 	public static CircuitImpl getCircuitImpl(Circuit circuit) {

@@ -3,6 +3,8 @@ package org.genetics.circuit.command;
 import org.genetics.camel.Application;
 import org.genetics.camel.GenericRoute;
 import org.genetics.circuit.circuit.Circuit;
+import org.genetics.circuit.circuit.CircuitContextDecorator;
+import org.genetics.circuit.circuit.CircuitImpl;
 import org.genetics.circuit.circuit.CircuitOutputGenerator;
 import org.genetics.circuit.entity.SuiteWrapper;
 import org.genetics.circuit.service.CircuitService;
@@ -44,13 +46,28 @@ public class DumpDatabase {
 
         for (int i = 0; i < Math.min(circuitService.size(suiteWrapper), 20); i++) {
 
-            Circuit circuit = circuitService.findByPosition(suiteWrapper, i);
-            SuiteWrapperUtil.evaluate(suiteWrapper, circuit);
+            CircuitContextDecorator ccd = new CircuitContextDecorator(suiteWrapper, (CircuitImpl) circuitService.findByPosition(suiteWrapper, i));
+            ccd.evaluate();
 
-            logger.info(String.format("%d - %s", i, circuit.toString()));
+            logger.info(String.format("%d - %s", i, ccd.toString()));
         }
 
+        //test(circuitService, suiteWrapper);
 
+        int exitCode = SpringApplication.exit(applicationContext, new ExitCodeGenerator() {
+            @Override
+            public int getExitCode() {
+                // no errors
+                return 0;
+            }
+        });
+
+        System.exit(exitCode);
+
+
+    }
+
+    private static void test(CircuitService circuitService, SuiteWrapper suiteWrapper) {
         Circuit circuit = circuitService.findByPosition(suiteWrapper, 0);
 
         if (circuit != null) {
@@ -69,7 +86,22 @@ public class DumpDatabase {
                 dump(c, circuit, output);
             }
 
+            dump('!', circuit, output);
+            dump('@', circuit, output);
+            dump('#', circuit, output);
             dump('$', circuit, output);
+            dump('%', circuit, output);
+            dump('&', circuit, output);
+            dump('*', circuit, output);
+            dump('(', circuit, output);
+            dump(')', circuit, output);
+            dump('-', circuit, output);
+            dump('_', circuit, output);
+            dump('+', circuit, output);
+            dump('=', circuit, output);
+
+            dump('^', circuit, output);
+
 
             dump('á', circuit, output);
             dump('é', circuit, output);
@@ -93,20 +125,26 @@ public class DumpDatabase {
 
             dump('a', circuit, output);
             dump('b', circuit, output);
+            dump('d', circuit, output);
+            dump('e', circuit, output);
+            dump('f', circuit, output);
+            dump('i', circuit, output);
+            dump('k', circuit, output);
+            dump('l', circuit, output);
+            dump('o', circuit, output);
+            dump('u', circuit, output);
+            dump('v', circuit, output);
+            dump('z', circuit, output);
             dump('A', circuit, output);
             dump('B', circuit, output);
+            dump('Y', circuit, output);
             dump('0', circuit, output);
+            dump('2', circuit, output);
+            dump('6', circuit, output);
+            dump('9', circuit, output);
             dump('á', circuit, output);
+            dump('é', circuit, output);
 
-            int exitCode = SpringApplication.exit(applicationContext, new ExitCodeGenerator() {
-                @Override
-                public int getExitCode() {
-                    // no errors
-                    return 0;
-                }
-            });
-
-            System.exit(exitCode);
         }
 
     }

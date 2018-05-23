@@ -28,20 +28,12 @@ public class EnricherProcessor implements Processor {
 
         CircuitContextDecorator oldBetter = memoryPopulationMediator.getFirst();
 
-
         CircuitImpl[] array = null;
 
         if (oldBetter != null) {
-            CircuitImpl c1 = CircuitScramble.join((CircuitImpl) oldBetter.getRootCircuit().clone(), circuitImpl.clone());
-            CircuitImpl c2 = CircuitScramble.join(circuitImpl                                     , (CircuitImpl) oldBetter.getRootCircuit().clone());
-
-            array = new CircuitImpl[] {c1, c2};
-        }
-        else {
-            array = new CircuitImpl[] {circuitImpl};
+            circuitImpl = CircuitScramble.join(circuitImpl, (CircuitImpl) oldBetter.getRootCircuit().clone());
         }
 
-
-        exchange.getIn().setBody(array);
+        exchange.getIn().setBody(circuitImpl);
     }
 }

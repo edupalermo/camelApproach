@@ -1,5 +1,6 @@
 package org.genetics.circuit.port;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
@@ -91,6 +92,16 @@ public class PortNot extends Port {
 	@Override
 	public void translate(Map<Integer, Integer> map) {
 		this.index = map.get(this.index).intValue();
+	}
+
+	@Override
+	public void adustLeft(int[] indexed) {
+		this.index -= indexed[this.index];
+	}
+
+	@Override
+	public int[] getReferences() {
+		return new int[] {this.index};
 	}
 
 }

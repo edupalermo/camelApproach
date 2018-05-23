@@ -27,11 +27,11 @@ public class GeneratorMethodDefinitionProcessor implements Processor, Initializi
     public void afterPropertiesSet() throws Exception {
         randomWeight = new RandomWeight<String>();
 
-        randomWeight.addByWeight(   1, Constants.GENERATOR_METHOD_RANDOM);
-        randomWeight.addByWeight(  50, Constants.GENERATOR_METHOD_ENRICH_EXISTING);
-        randomWeight.addByWeight(1000, Constants.GENERATOR_METHOD_MIX_EXISTING);
+        randomWeight.addByWeight(  1, Constants.GENERATOR_METHOD_RANDOM);
+        randomWeight.addByWeight(100, Constants.GENERATOR_METHOD_ENRICH_EXISTING);
+        randomWeight.addByWeight(200, Constants.GENERATOR_METHOD_MIX_EXISTING);
 
-        randomWeight.addByPeriod(MINUTE, Constants.GENERATOR_METHOD_RANDOM);
+        randomWeight.addByPeriod(10 * MINUTE, Constants.GENERATOR_METHOD_RANDOM);
         randomWeight.addByPeriod(10 * MINUTE, Constants.GENERATOR_METHOD_MIGRATE_RANDOM_FROM_DATABASE);
     }
 }

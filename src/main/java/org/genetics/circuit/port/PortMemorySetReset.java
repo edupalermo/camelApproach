@@ -1,5 +1,6 @@
 package org.genetics.circuit.port;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
@@ -169,6 +170,15 @@ public class PortMemorySetReset extends Port {
 		this.major = Math.max(newMinor, newMajor);
 	}
 
-	
-	
+	@Override
+	public void adustLeft(int[] indexed) {
+		this.minor -= indexed[this.minor];
+		this.major -= indexed[this.major];
+	}
+
+	@Override
+	public int[] getReferences() {
+		return new int[] {this.minor, this.major};
+	}
+
 }

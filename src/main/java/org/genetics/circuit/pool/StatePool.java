@@ -12,6 +12,8 @@ public class StatePool {
 	
 	private static final List<Integer> indexList = new ArrayList<Integer>();
 	private static final List<List<boolean[]>> statePool = new ArrayList<List<boolean[]>>();
+
+	private static final int MULTIPLE = 20000;
 	
 	public synchronized static boolean[] borrow(int size) {
 		boolean[] result = null;
@@ -65,9 +67,11 @@ public class StatePool {
 		logger.info(String.format("Instantiating StatePool [%d]...", size));
 		return new boolean[size];
 	}
-	
+
+
+
 	private static int transformSize(int size) {
-		return 1000 * (1 + (size / 1000));
+		return MULTIPLE * (1 + (size / MULTIPLE));
 	}
 	
 	public static void main(String[] args) {

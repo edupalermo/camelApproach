@@ -13,6 +13,9 @@ import org.genetics.circuit.utils.SuiteWrapperUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
+
 @Component
 public class EnrichExistingGeneratorProcessor implements Processor {
 
@@ -34,8 +37,10 @@ public class EnrichExistingGeneratorProcessor implements Processor {
             exchange.setProperty(Exchange.ROUTE_STOP, Boolean.TRUE);
         }
         else {
+            Random random = ThreadLocalRandom.current();
+
             CircuitImpl newCircuit = c1.clone();
-            CircuitRandomGenerator.randomEnrich(newCircuit, (int)(1 + ((ENRICH_PERCENTAGE * newCircuit.size()) / 100)), SuiteWrapperUtil.useMemory(suiteWrapper));
+            CircuitRandomGenerator.randomEnrich(newCircuit, 1 + random.nextInt(newCircuit.size()), SuiteWrapperUtil.useMemory(suiteWrapper));
             exchange.getIn().setBody(newCircuit);
         }
     }

@@ -38,7 +38,7 @@ public class PopulationDumpProcessor  implements Processor {
         memoryPopulationMediator.dump(suiteWrapper);
 
         logger.info(String.format("To generate   [%3d] Memory push   [%3d]", camelContext.getEndpoint(GenericRoute.sedaGenerator(), SedaEndpoint.class).getCurrentQueueSize(), camelContext.getEndpoint(GenericRoute.sedaUpdateMemoryPopulation(), SedaEndpoint.class).getCurrentQueueSize()));
-        logger.info(String.format("To evaluate   [%3d] Database push [%3d]", camelContext.getEndpoint(GenericRoute.sedaEnricher(), SedaEndpoint.class).getCurrentQueueSize(), camelContext.getEndpoint(GenericRoute.sedaUpdatePersistentPopulation(), SedaEndpoint.class).getCurrentQueueSize()));
+        logger.info(String.format("To enricher   [%3d] Database push [%3d]", camelContext.getEndpoint(GenericRoute.sedaEnricher(), SedaEndpoint.class).getCurrentQueueSize(), camelContext.getEndpoint(GenericRoute.sedaUpdatePersistentPopulation(), SedaEndpoint.class).getCurrentQueueSize()));
         logger.info(String.format("To simplifier [%3d]", camelContext.getEndpoint(GenericRoute.sedaSimplifier(), SedaEndpoint.class).getCurrentQueueSize()));
 
     }

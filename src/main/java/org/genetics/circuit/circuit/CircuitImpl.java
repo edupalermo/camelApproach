@@ -62,6 +62,48 @@ public class CircuitImpl extends ArrayList<Port> implements Circuit {
 		this.remove(index);
 	}
 
+	public void removePorts(List<Integer> ports) {
+		if (ports.size() == 0) {
+			return;
+		}
+
+		int indexed[] = transform(ports);
+
+		int ri = ports.size() - 1;
+		for (int i = size()-1; i >=0; i--) {
+			Port port = this.get(i);
+			if (!(port instanceof PortInput)) {
+				this.get(i).adustLeft(indexed);
+
+				if (i == ports.get(ri)) {
+					this.remove(i);
+
+					if (ri > 0) {
+						ri--;
+					}
+					else {
+						break;
+					}
+				}
+			}
+		}
+	}
+
+	private int[] transform(List<Integer> ports) {
+		int output[] = new int[this.size()];
+
+		int count = 0;
+
+		for (int i = 0; i < output.length; i++) {
+			output[i] = count;
+			if ((count < ports.size()) && (i == ports.get(count).intValue())) {
+				count++;
+			}
+		}
+
+		return output;
+	}
+
 	@Override
 	public CircuitImpl clone() {
 		CircuitImpl circuit = new CircuitImpl();
@@ -87,8 +129,8 @@ public class CircuitImpl extends ArrayList<Port> implements Circuit {
 	@Override
 	public double similarity(Circuit other) {
 
-		if (other instanceof CircuitImpl) {
-			throw new RuntimeException("Impossible to comprare similarity of different types!");
+		if (!(other instanceof CircuitImpl)) {
+			throw new RuntimeException(String.format("Impossible to comprare similarity of different types! %s", other.getClass().getName()));
 		}
 
 		int dist = getLevenshteinDistance(this, (CircuitImpl) other);
@@ -138,18 +180,32 @@ public class CircuitImpl extends ArrayList<Port> implements Circuit {
 		return cost[len0 - 1];
 	}
 
-	private int getSizeOfInput() {
-		int total = 0;
+	public void assignInputToState(boolean state[], boolean input[], boolean[] output, int[][] outputStat) {
+		for (int i = 0; i < input.length; i++) {
+			state[i] = input[i];
 
-		for (int i = 0; i < size(); i++) {
-			if (get(i) instanceof PortInput) {
-				total++;
-			}
-			else {
-				break;
+			for (int j = 0; j < output.length; j++) {
+				if (output[j] == state[i]) {
+					outputStat[i][j]++;
+				}
 			}
 		}
-		return total;
 	}
+
+	public void propagate(boolean state[], boolean[] output, int[][] outputStat) {
+		for (int i = 0; i < this.size(); i++) {
+			if (!(this.get(i) instanceof PortInput)) {
+				state[i] = this.get(i).evaluate(state);
+
+				for (int j = 0; j < output.length; j++) {
+					if (output[j] == state[i]) {
+						outputStat[i][j]++;
+					}
+				}
+			}
+		}
+	}
+
+
 
 }

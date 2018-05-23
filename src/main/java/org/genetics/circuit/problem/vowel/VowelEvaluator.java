@@ -3,9 +3,11 @@ package org.genetics.circuit.problem.vowel;
 import org.genetics.circuit.circuit.Circuit;
 import org.genetics.circuit.circuit.CircuitHitsEvaluator;
 import org.genetics.circuit.circuit.CircuitImpl;
+import org.genetics.circuit.circuit.CircuitNewSimplifier;
 import org.genetics.circuit.problem.EvaluationResult;
 import org.genetics.circuit.problem.Evaluator;
 import org.genetics.circuit.problem.TrainingSet;
+import org.genetics.circuit.utils.CircuitUtils;
 
 import java.io.Serializable;
 
@@ -23,7 +25,21 @@ public class VowelEvaluator implements Evaluator, Serializable {
 		return resultBuilder.build();
 	}
 
-	private static class Result implements EvaluationResult<Result> {
+	@Override
+	public EvaluationResult simplifyAndEvaluate(TrainingSet trainingSet, Circuit circuit) {
+
+		CircuitImpl circuitImpl = CircuitUtils.getCircuitImpl(circuit);
+
+		int hits = CircuitNewSimplifier.simplify(trainingSet, circuitImpl);
+
+		Result.ResultBuilder resultBuilder = Result.getBuilder();
+		resultBuilder.hit(hits);
+		resultBuilder.circuitSize(circuitImpl.size());
+
+		return resultBuilder.build();
+	}
+
+	public static class Result implements EvaluationResult<Result> {
 
 		private final int hit;
 		private final int circuitSize;

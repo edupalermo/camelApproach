@@ -2,16 +2,21 @@ package org.genetics.circuit;
 
 import org.genetics.circuit.circuit.CircuitContextDecorator;
 import org.genetics.circuit.circuit.CircuitImpl;
+import org.genetics.circuit.circuit.CircuitNewSimplifier;
 import org.genetics.circuit.circuit.CircuitRandomGenerator;
 import org.genetics.circuit.configuration.Configuration;
 import org.genetics.circuit.entity.SuiteWrapper;
 import org.genetics.circuit.problem.Suite;
+import org.genetics.circuit.problem.vowel.VowelSuite;
 import org.genetics.circuit.utils.CircuitUtils;
 import org.genetics.circuit.utils.IoUtils;
 import org.genetics.circuit.utils.SuiteWrapperUtil;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -30,9 +35,9 @@ public class TestSimplifier {
         suiteWrapper.setSuite(suite);
 
         circuitImpl = CircuitRandomGenerator.randomGenerate(SuiteWrapperUtil.getInputSize(suiteWrapper), 500000, true);
-        CircuitContextDecorator ccd = new CircuitContextDecorator(circuitImpl);
+        CircuitContextDecorator ccd = new CircuitContextDecorator(suiteWrapper, circuitImpl);
 
-        ccd.evaluate(suiteWrapper);
+        ccd.evaluate();
 
         logger.info("Original: " + ccd.toString());
 
@@ -45,8 +50,8 @@ public class TestSimplifier {
 
         logger.info("Took: " + (System.currentTimeMillis() - inicio));
 
-        CircuitContextDecorator ccd1 = new CircuitContextDecorator(circuitImpl);
-        ccd1.evaluate(suiteWrapper);
+        CircuitContextDecorator ccd1 = new CircuitContextDecorator(suiteWrapper, circuitImpl);
+        ccd1.evaluate();
         logger.info("Simplificado: " + ccd1.toString());
 
     }
@@ -93,8 +98,38 @@ public class TestSimplifier {
         int t = 300000; // 704.982.612
         System.out.println(getPosition(14, t, t-1, t-2));
 
-
     }
+
+
+    @Test
+    public void performance() throws Exception {
+
+        SuiteWrapper suiteWrapper = new SuiteWrapper();
+        suiteWrapper.setSuite(new VowelSuite());
+
+        CircuitImpl circuitImpl = CircuitRandomGenerator.randomGenerate(SuiteWrapperUtil.getInputSize(suiteWrapper), 50000, true);
+        CircuitContextDecorator ccd = new CircuitContextDecorator(suiteWrapper, circuitImpl);
+        ccd.evaluate();
+
+        System.out.println(ccd.toString());
+        long initial = System.currentTimeMillis();
+        ccd = ccd.simplify();
+        ccd.evaluate();
+        System.out.println(System.currentTimeMillis() - initial);
+        System.out.println(ccd.toString());
+
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+
+        DataOutputStream output = new DataOutputStream(baos);
+
+        output.writeFloat(123f);
+
+        output.flush();
+
+        System.out.println(baos.toByteArray().length);
+    }
+
 
 
     public static long getPosition(int inputSize, int circuitSize, int index, int reference) {
@@ -117,6 +152,62 @@ public class TestSimplifier {
         long f = (((long)nonInputIndex * ((long)nonInputIndex - 1l)) / 2l);
 
         return ((long)nonInputIndex * (long)inputSize) + f + ((long) reference);
+    }
+
+    @Test
+    public void testNewSimplifier() {
+
+        SuiteWrapper suiteWrapper = new SuiteWrapper();
+        suiteWrapper.setSuite(new VowelSuite());
+
+        CircuitImpl original = CircuitRandomGenerator.randomGenerate(SuiteWrapperUtil.getInputSize(suiteWrapper), 100000, true);
+        CircuitImpl one = original.clone();
+        CircuitImpl two = original.clone();
+        CircuitImpl three = original.clone();
+        CircuitImpl four = original.clone();
+
+        long initial = System.currentTimeMillis();
+        CircuitContextDecorator ccd1 = new CircuitContextDecorator(suiteWrapper, one);
+        ccd1 =ccd1.simplify();
+        ccd1.evaluate();
+        System.out.println(String.format("1o : %d %s", (System.currentTimeMillis() - initial), ccd1.toString()));
+
+        int size = ccd1.getRootCircuit().size();
+
+        initial = System.currentTimeMillis();
+        CircuitContextDecorator ccd2 = new CircuitContextDecorator(suiteWrapper, two);
+        ccd2.evaluate();
+        System.out.println(String.format("2o : %d %s", (System.currentTimeMillis() - initial), ccd2.toString()));
+
+        System.gc();
+        initial = System.currentTimeMillis();
+        CircuitNewSimplifier.USE_STREAM = false;
+        CircuitContextDecorator ccd3 = new CircuitContextDecorator(suiteWrapper, three);
+        ccd3 = ccd3.simplifyAndEvaluate();
+        System.out.println(String.format("3o-: %d %s", (System.currentTimeMillis() - initial), ccd3.toString()));
+
+        if (size != ccd3.getRootCircuit().size()) {
+            System.out.println("Falhou!!!!!!!!!!!!!!!!");
+            IoUtils.objectToBase64(original);
+        }
+
+        System.gc();
+        initial = System.currentTimeMillis();
+        CircuitNewSimplifier.USE_STREAM = true;
+        CircuitContextDecorator ccd4 = new CircuitContextDecorator(suiteWrapper, four);
+        ccd4 = ccd4.simplifyAndEvaluate();
+        System.out.println(String.format("4o+: %d %s", (System.currentTimeMillis() - initial), ccd4.toString()));
+
+        initial = System.currentTimeMillis();
+        CircuitContextDecorator ccd5 = new CircuitContextDecorator(suiteWrapper, ccd3.getRootCircuit().clone());
+        ccd5.evaluate();
+        System.out.println(String.format("5o : %d %s", (System.currentTimeMillis() - initial), ccd5.toString()));
+
+
+        // Lower Ports First
+        // Remove not used second
+
+
     }
 
 

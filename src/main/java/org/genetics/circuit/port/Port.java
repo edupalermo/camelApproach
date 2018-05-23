@@ -1,6 +1,7 @@
 package org.genetics.circuit.port;
 
 import java.io.Serializable;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -14,6 +15,8 @@ public abstract class Port implements Serializable, Comparable<Port>, Cloneable 
 
 	public abstract void adustLeft(int index);
 
+	public abstract void adustLeft(int[] indexed);
+
 	public abstract boolean references(int index);
 
 	public abstract boolean checkConsistency(int index);
@@ -21,9 +24,11 @@ public abstract class Port implements Serializable, Comparable<Port>, Cloneable 
 	public abstract int compareTo(Port port);
 	
 	public abstract void adjust(int oldIndex, int newIndex);
-	
+
 	public abstract void translate(Map<Integer, Integer> map);
-	
+
+	public abstract int[] getReferences();
+
 	@Override
 	public abstract Object clone();
 

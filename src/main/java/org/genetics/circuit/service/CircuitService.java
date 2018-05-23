@@ -17,7 +17,7 @@ public class CircuitService {
 
 	private static final Logger logger = LoggerFactory.getLogger(CircuitService.class);
 
-	private static final int POPULATION_LIMIT = 10000;
+	private static final int POPULATION_LIMIT = 2000;
 
 	@Autowired
 	private CircuitWrapperDao circuitWrapperDao;
@@ -97,8 +97,8 @@ public class CircuitService {
 			SuiteWrapper suiteWrapper = circuitContextDecorator.getSuiteWrapper();
 
 			int positionToEvaluate = limits.getPositionToEvaluate();
-			CircuitContextDecorator evaluate = new CircuitContextDecorator((CircuitImpl) circuitWrapperDao.findByPosition(suiteWrapper, positionToEvaluate));
-			evaluate.evaluate(suiteWrapper);
+			CircuitContextDecorator evaluate = new CircuitContextDecorator(suiteWrapper, (CircuitImpl) circuitWrapperDao.findByPosition(suiteWrapper, positionToEvaluate));
+			evaluate.evaluate();
 
 			limits.setComparationResult(positionToEvaluate, evaluate.compareTo(circuitContextDecorator));
 
@@ -117,12 +117,12 @@ public class CircuitService {
 			logger.warn("Fail to lock database access!");
 			count++;
 			try {
-				Thread.sleep(500);
+				Thread.sleep(1000);
 			} catch (InterruptedException e) {
 				throw new RuntimeException(e);
 			}
 
-			if (lockKey == null && count >= 10) {
+			if (lockKey == null && count >= 600) {
 				throw new RuntimeException(String.format("Fail to obtain lock after %d attempts", count));
 			}
 		}

@@ -20,6 +20,17 @@ public class VowelTrainingSet implements TrainingSet {
 	public VowelTrainingSet() {
 		solutions.add(new StringSolution("a", "vogal"));
 		solutions.add(new StringSolution("b", "consoante"));
+		solutions.add(new StringSolution("d", "consoante"));
+		solutions.add(new StringSolution("e", "vogal"));
+		solutions.add(new StringSolution("f", "consoante"));
+		solutions.add(new StringSolution("h", "consoante"));
+		solutions.add(new StringSolution("i", "vogal"));
+		solutions.add(new StringSolution("k", "consoante"));
+		solutions.add(new StringSolution("l", "consoante"));
+		solutions.add(new StringSolution("o", "vogal"));
+		solutions.add(new StringSolution("u", "vogal"));
+		solutions.add(new StringSolution("v", "consoante"));
+		solutions.add(new StringSolution("z", "consoante"));
 		/*
 		solutions.add(new StringSolution("c", "consoante"));
 		solutions.add(new StringSolution("d", "consoante"));
@@ -37,11 +48,11 @@ public class VowelTrainingSet implements TrainingSet {
 		solutions.add(new StringSolution("q", "consoante"));
 		solutions.add(new StringSolution("u", "vogal"));
 		solutions.add(new StringSolution("y", "consoante"));
-		solutions.add(new StringSolution("z", "consoante"));
 		*/
 
 		solutions.add(new StringSolution("A", "vogal"));
 		solutions.add(new StringSolution("B", "consoante"));
+		solutions.add(new StringSolution("Y", "consoante"));
 
 		/*
 		solutions.add(new StringSolution("D", "consoante"));
@@ -56,8 +67,11 @@ public class VowelTrainingSet implements TrainingSet {
 		solutions.add(new StringSolution("Y", "consoante"));
 		solutions.add(new StringSolution("Z", "consoante"));
 		*/
-		
+
 		solutions.add(new StringSolution("0", "número"));
+		solutions.add(new StringSolution("2", "número"));
+		solutions.add(new StringSolution("6", "número"));
+		solutions.add(new StringSolution("9", "número"));
 
 		/*
 		solutions.add(new StringSolution("1", "número"));
@@ -67,8 +81,9 @@ public class VowelTrainingSet implements TrainingSet {
 		solutions.add(new StringSolution("8", "número"));
 		solutions.add(new StringSolution("9", "número"));
 		*/
-		
+
 		solutions.add(new StringSolution("á", "vogal"));
+		solutions.add(new StringSolution("é", "vogal"));
 
 		/*
 		solutions.add(new StringSolution("à", "vogal"));

@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class GenericRoute extends RouteBuilder {
 
-    private static final String CONCURRENT_CONSUMERS = "5";
+    private static final String CONCURRENT_CONSUMERS = "3";
     private static final String QUEUE_SIZE = "20";
 
     private static final String PROBLEM_NAME = "CHAR_TYPE";
@@ -40,7 +40,6 @@ public class GenericRoute extends RouteBuilder {
         from(sedaEnricher())
             .filter(header(Constants.HEADER_POPULATION_GENERATION).isEqualTo(method("memoryPopulationMediator", "getGenerationId")))
             .process("enricherProcessor")
-            .split(body())
             .to(sedaSimplifier());
 
         from(sedaSimplifier())
@@ -68,14 +67,12 @@ public class GenericRoute extends RouteBuilder {
                 .to(sedaGenerator());
 
         // Dump Population status
-        from("timer://timer2?period=15s")
+        from("timer://timer2?period=10s")
                 .setHeader(Constants.HEADER_PROBLEM_NAME, constant(PROBLEM_NAME))
                 .process("populationDumpProcessor");
 
-        /*
         from("timer://timer3?delay=1m&period=10m")
                 .process("killerProcessor");
-                */
 
     }
 

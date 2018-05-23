@@ -8,5 +8,7 @@ import java.io.Serializable;
 public interface Evaluator extends Serializable {
 
 	EvaluationResult evaluate(TrainingSet trainingSet, Circuit circuit);
-	
+
+	EvaluationResult simplifyAndEvaluate(TrainingSet trainingSet, Circuit circuit);
+
 }
